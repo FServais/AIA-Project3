@@ -20,11 +20,11 @@ data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
 data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 0
 data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 1
 
-print(data.head(5))
-print(data.describe())
+# print(data.head(5))
+# print(data.describe())
 
 # Extract 'y'
+rides = data['POLYLINE'].values
 
-# Ne marche pas
-# test = np.array([eval(row) for _, row in data["POLYLINE"].iteritems()])
-# print(test)
+X, y = rides[:-1], rides[-1]
+
