@@ -67,8 +67,8 @@ if __name__ == "__main__":
     X_test = list(map(eval, rides_test[:-1]))
 
     # # How to make timestamp nicer
-    # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")
-
+    # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")  
+    
     # Training
     knn = KNeighborsClassifier()
     knn.fit(X, y)
