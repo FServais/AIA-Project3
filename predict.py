@@ -60,10 +60,15 @@ if __name__ == "__main__":
     # MISSING_DATA
     data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 0
     data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 1
+    
+    data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
+    
+    data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
 
-    print(data.head(5))
-    print(data.describe())
-
+    #print(data.head(6))
+    #print(data.describe())
+    
+    
     # Extract 'y'
     rides = data['POLYLINE'].values
     rides = list(map(eval, rides))
@@ -84,19 +89,19 @@ if __name__ == "__main__":
     rides_test = test['POLYLINE'].values
 
     X_test = list(map(eval, rides_test[:-1]))
+    
 
     # # How to make timestamp nicer
-    # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")
-
+    # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")  
+    
     # Training
-    dtr = SVR()
-
-    for i in range(len(X)):
-        dtr.fit(X[i], y[i])
+    dtr = DecisionTreeRegressor()
+    
+    #for i in range(len(X)):
+    dtr.fit(X, y)
 
         # Prediction
-        y_predict = dtr.predict(X_test[i])
-        print(y_predict)
+    y_predict = dtr.predict(X_test[i])
 
     result = np.zeros((n_trip_test, 2))
 
@@ -106,3 +111,4 @@ if __name__ == "__main__":
     #
     # # Write submission
     # print_submission(trip_id=trip_id, result=result, name="sampleSubmission_generated")
+    
