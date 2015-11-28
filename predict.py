@@ -6,6 +6,10 @@
 # result is a two-column matrix made of rows of "Latitude"x"Longitude" pairs.
 # 		Note that the line "result[i,:]" should correspond to id "trip_id[i]"
 # name is the name you want for your submission file
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+
+
 def print_submission(trip_id, result, name):
     n_line, n_columns = result.shape
     with open(name + '.txt', 'w') as f:
@@ -22,6 +26,15 @@ import numpy as np
 import pandas as pd
 
 from sklearn.neighbors import KNeighborsClassifier
+
+def get_last_coordinate(l):
+    """
+    [[a,b], [c,d], [e,f]] -> [e,f]
+    :param l:
+    :return:
+    """
+    return l[-1]
+
 
 if __name__ == "__main__":
 
@@ -51,9 +64,13 @@ if __name__ == "__main__":
 
     # Extract 'y'
     rides = data['POLYLINE'].values
+    rides = list(map(eval, rides))
 
-    X, y = list(map(eval, rides[:-1])), eval(rides[-1])
-
+    X = []
+    y = []
+    for i in range(len(rides)):
+        X.append(rides[i][:-1])
+        y.append(rides[i][-1])
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -70,11 +87,14 @@ if __name__ == "__main__":
     # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")
 
     # Training
-    knn = KNeighborsClassifier()
-    knn.fit(X, y)
+    dtr = DecisionTreeRegressor()
 
-    # Prediction
-    y_predict = knn.predict(X_test)
+    for i in range(len(X)):
+        dtr.fit(X[i], y[i])
+
+        # Prediction
+        y_predict = dtr.predict(X_test[i])
+
     result = np.zeros((n_trip_test, 2))
 
     # for i in range(n_trip_test):
