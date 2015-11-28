@@ -1,30 +1,85 @@
-from pandas import read_csv
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# How to use this function?
+# trip_id is the first column of the submission, i.e., the id of the sample
+# result is a two-column matrix made of rows of "Latitude"x"Longitude" pairs.
+# 		Note that the line "result[i,:]" should correspond to id "trip_id[i]"
+# name is the name you want for your submission file
+def print_submission(trip_id, result, name):
+    n_line, n_columns = result.shape
+    with open(name + '.txt', 'w') as f:
+        f.write('"TRIP_ID","LATITUDE","LONGITUDE"\n')
+        for i in range(n_line):
+            line = '"{}",{},{}\n'.format(trip_id[i], result[i,0], result[i,1])
+            f.write(line)
+
+
+# As an example, when you call "toy_script" as a script,
+# it will produce the file "sampleSubmission.csv"
 
 import numpy as np
+import pandas as pd
 
-data = read_csv("train_data.csv", index_col="TRIP_ID")
+from sklearn.neighbors import KNeighborsClassifier
 
-# Replace non-numeric values
+if __name__ == "__main__":
 
-# CALL_TYPE
-data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
+    # Data Loading
+    data = pd.read_csv('test.csv', index_col="TRIP_ID")
+    n_trip_train, _ = data.shape
+    print('Shape of train data: {}'.format(data.shape))
 
-# DAY_TYPE
-data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
+    # Replace non-numeric values
 
-# MISSING_DATA
-data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 0
-data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 1
+    # CALL_TYPE
+    data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
+    data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
+    data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
 
-# print(data.head(5))
-# print(data.describe())
+    # DAY_TYPE
+    data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
+    data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
+    data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
 
-# Extract 'y'
-rides = data['POLYLINE'].values
+    # MISSING_DATA
+    data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 0
+    data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 1
 
-X, y = rides[:-1], rides[-1]
+    print(data.head(5))
+    print(data.describe())
 
+    # Extract 'y'
+    rides = data['POLYLINE'].values
+
+    X, y = list(map(eval, rides[:-1])), eval(rides[-1])
+
+
+    # Test Set Loading
+    test = pd.read_csv('test.csv', index_col="TRIP_ID")
+    n_trip_test, _ = test.shape
+    print('Shape of test data: {}'.format(test.shape))
+    trip_id = list(test.index)
+
+    # Extract 'y'
+    rides_test = test['POLYLINE'].values
+
+    X_test = list(map(eval, rides_test[:-1]))
+
+    # # How to make timestamp nicer
+    # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")
+
+    # Training
+    knn = KNeighborsClassifier()
+    knn.fit(X, y)
+
+    # Prediction
+    y_predict = knn.predict(X_test)
+    result = np.zeros((n_trip_test, 2))
+
+    # for i in range(n_trip_test):
+    #     result[i, 0] = LATITUDE
+    #     result[i, 1] = LONGITUDE
+    #
+    # # Write submission
+    # print_submission(trip_id=trip_id, result=result, name="sampleSubmission_generated")
