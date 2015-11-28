@@ -6,6 +6,7 @@
 # result is a two-column matrix made of rows of "Latitude"x"Longitude" pairs.
 # 		Note that the line "result[i,:]" should correspond to id "trip_id[i]"
 # name is the name you want for your submission file
+from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
@@ -25,7 +26,8 @@ def print_submission(trip_id, result, name):
 import numpy as np
 import pandas as pd
 
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+
 
 def get_last_coordinate(l):
     """
@@ -87,13 +89,14 @@ if __name__ == "__main__":
     # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")
 
     # Training
-    dtr = DecisionTreeRegressor()
+    dtr = SVR()
 
     for i in range(len(X)):
         dtr.fit(X[i], y[i])
 
         # Prediction
         y_predict = dtr.predict(X_test[i])
+        print(y_predict)
 
     result = np.zeros((n_trip_test, 2))
 
