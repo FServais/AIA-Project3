@@ -73,8 +73,8 @@ if __name__ == "__main__":
 
     X = []
     y = []
-    for i in range(len(rides)):
-        X.append(rides[i][:-1])
+    for i in range(len(data)):
+        X.append(rides[i][-2])
         y.append(rides[i][-1])
 
     # Test Set Loading
