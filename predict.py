@@ -26,7 +26,7 @@ def print_submission(trip_id, result, name):
 import numpy as np
 import pandas as pd
 
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.neighbors import KNeighborsRegressor
 from itertools import repeat
 from math import floor
 
@@ -43,7 +43,7 @@ def repeat_list(l, times_repeated):
 
 def expand_list(l, final_size):
     l_size = len(l)
-    if final_size <= l_size:
+    if final_size <= l_size or l_size <= 0:
         return l
 
     repeated_list = []
@@ -65,7 +65,7 @@ def expand_list(l, final_size):
 if __name__ == "__main__":
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=250000)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=400000)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -91,8 +91,6 @@ if __name__ == "__main__":
 
     #Delete all the datas which have missing data in their paths
     data = data[data["MISSING_DATA"] != 1]
-    
-    
 
     # Extract 'y' and long and lat
     rides = data['POLYLINE'].values
@@ -105,52 +103,37 @@ if __name__ == "__main__":
             data.drop(data.index[i])
     '''
 
-
-
-
-
-
-
     #print(data.describe())
     #print(data.head(6))
-
-
-
-
-
 
     X_lat = []
     X_long = []
     y = []
+
+    longest_path = 0
     for i in range(len(rides)):
+        if len(rides[i]) == 0:
+            continue
+
         X_lat_temp = []
         X_long_temp = []
-        for j in range(len(rides[i])):
-            if len(rides[i]) == 0:
-                continue
-            else:
-                X_lat_temp.append(rides[i][j][0])
-                X_long_temp.append(rides[i][j][1])
-            y.append(rides[i][-1])
+
+        length_path = len(rides[i])
+        if length_path > longest_path:
+            longest_path = length_path
+
+        for j in range(length_path):
+            X_lat_temp.append(rides[i][j][0])
+            X_long_temp.append(rides[i][j][1])
+
         X_lat.append(X_lat_temp)
         X_long.append(X_long_temp)
 
+        y.append(rides[i][-1])
 
-
-    # X = np.zeros((len(rides), 2)) # Origin, last step
-    # y = np.zeros(len(rides))
-
-    # for r in range(len(rides)):
-    #     X[i][0] = rides[i][0]
-    #     if len(rides[i]) < 2:
-    #         X[i][1] = rides[i][0]
-    #     else:
-    #         X[i][1] = rides[i][-2]
-    #
-    #     y[i] = rides
-
-
-
+    X = []
+    for i in range(len(X_lat)):
+        X.append(expand_list(X_lat[i], longest_path) + expand_list(X_long[i], longest_path))
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -158,20 +141,34 @@ if __name__ == "__main__":
     print('Shape of test data: {}'.format(test.shape))
     trip_id = list(test.index)
 
-    # Extract 'y'
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
 
+    #
+    # X_test = []
+    # for i in range(len(rides_test)):
+    #     if len(rides_test[i]) < 2:
+    #         X_test.append(rides_test[i][0])
+    #     else:
+    #         X_test.append(rides_test[i][-2])
 
     X_test = []
+    # For each path
     for i in range(len(rides_test)):
-        if len(rides_test[i]) < 2:
-            X_test.append(rides_test[i][0])
+        if len(rides_test[i]) < 1:
+            continue
         else:
-            X_test.append(rides_test[i][-2])
+            X_lat_test_tmp = []
+            X_long_test_tmp = []
 
+            # For each coordinate
+            for coord in rides_test[i]:
+                X_lat_test_tmp.append(coord[0])
+                X_long_test_tmp.append(coord[1])
 
-    # # How to make timestamp nicer
+            X_test.append(expand_list(X_lat_test_tmp, longest_path) + expand_list(X_long_test_tmp, longest_path))
+
+    # How to make timestamp nicer
     # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")  
     
     # Training
