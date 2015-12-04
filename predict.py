@@ -27,7 +27,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-
+from itertools import repeat
+from math import floor
 
 def get_last_coordinate(l):
     """
@@ -37,13 +38,47 @@ def get_last_coordinate(l):
     """
     return l[-1]
 
+def repeat_list(l, times_repeated):
+    return [x for item in l for x in repeat(item, times_repeated)]
+
+def expand_list(l, final_size):
+    l_size = len(l)
+    if final_size <= l_size:
+        return l
+
+    repeated_list = []
+    repeated_list.extend(l)
+
+    mult_each_el = floor(final_size/l_size)
+    remaining = final_size - (mult_each_el * l_size)
+
+    t1 = []
+    t2 = []
+    if remaining > 0:
+        t1 = repeat_list(l[:remaining], mult_each_el+1)
+
+    t2 = repeat_list(l[remaining:], mult_each_el)
+
+    return t1 + t2
+
 
 if __name__ == "__main__":
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    data = pd.read_csv('test.csv', index_col="TRIP_ID")
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
+
+    f = 0
+    t = 0
+    for i in data["MISSING_DATA"]:
+        if i == True:
+            t += 1
+        else:
+            f += 1
+
+    print("False: {} ; True: {}".format(f, t))
+
 
     # Replace non-numeric values
 
@@ -58,8 +93,8 @@ if __name__ == "__main__":
     data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
 
     # MISSING_DATA
-    data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 0
-    data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 1
+    data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
+    data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
     
     data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
     
