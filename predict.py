@@ -65,20 +65,9 @@ def expand_list(l, final_size):
 if __name__ == "__main__":
 
     # Data Loading
-    data = pd.read_csv('test.csv', index_col="TRIP_ID")
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=250000)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
-
-    f = 0
-    t = 0
-    for i in data["MISSING_DATA"]:
-        if i == True:
-            t += 1
-        else:
-            f += 1
-
-    print("False: {} ; True: {}".format(f, t))
-
 
     # Replace non-numeric values
 
@@ -100,24 +89,53 @@ if __name__ == "__main__":
     
     data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
 
-    #print(data.head(6))
-    #print(data.describe())
+    #Delete all the datas which have missing data in their paths
+    data = data[data["MISSING_DATA"] != 1]
     
     
-    # Extract 'y'
+
+    # Extract 'y' and long and lat
     rides = data['POLYLINE'].values
     rides = list(map(eval, rides))
 
-    X = []
+    '''
+    #Delete the row with null path
+    for i in range(len(rides)):
+        if len(rides[i])==0:
+            data.drop(data.index[i])
+    '''
+
+
+
+
+
+
+
+    #print(data.describe())
+    #print(data.head(6))
+
+
+
+
+
+
+    X_lat = []
+    X_long = []
     y = []
     for i in range(len(rides)):
-        if len(rides[i]) == 0:
-            continue
-        if len(rides[i]) < 2:
-            X.append(rides[i][0])
-        else:
-            X.append(rides[i][-2])
-        y.append(rides[i][-1])
+        X_lat_temp = []
+        X_long_temp = []
+        for j in range(len(rides[i])):
+            if len(rides[i]) == 0:
+                continue
+            else:
+                X_lat_temp.append(rides[i][j][0])
+                X_long_temp.append(rides[i][j][1])
+            y.append(rides[i][-1])
+        X_lat.append(X_lat_temp)
+        X_long.append(X_long_temp)
+
+
 
     # X = np.zeros((len(rides), 2)) # Origin, last step
     # y = np.zeros(len(rides))
@@ -130,6 +148,9 @@ if __name__ == "__main__":
     #         X[i][1] = rides[i][-2]
     #
     #     y[i] = rides
+
+
+
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
