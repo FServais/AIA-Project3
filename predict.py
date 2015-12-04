@@ -6,6 +6,7 @@
 # result is a two-column matrix made of rows of "Latitude"x"Longitude" pairs.
 # 		Note that the line "result[i,:]" should correspond to id "trip_id[i]"
 # name is the name you want for your submission file
+from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
@@ -25,7 +26,8 @@ def print_submission(trip_id, result, name):
 import numpy as np
 import pandas as pd
 
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+
 
 def get_last_coordinate(l):
     """
@@ -39,7 +41,7 @@ def get_last_coordinate(l):
 if __name__ == "__main__":
 
     # Data Loading
-    data = pd.read_csv('test.csv', index_col="TRIP_ID")
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -73,9 +75,26 @@ if __name__ == "__main__":
 
     X = []
     y = []
-    for i in range(len(data)):
-        X.append(rides[i][-2])
+    for i in range(len(rides)):
+        if len(rides[i]) == 0:
+            continue
+        if len(rides[i]) < 2:
+            X.append(rides[i][0])
+        else:
+            X.append(rides[i][-2])
         y.append(rides[i][-1])
+
+    # X = np.zeros((len(rides), 2)) # Origin, last step
+    # y = np.zeros(len(rides))
+
+    # for r in range(len(rides)):
+    #     X[i][0] = rides[i][0]
+    #     if len(rides[i]) < 2:
+    #         X[i][1] = rides[i][0]
+    #     else:
+    #         X[i][1] = rides[i][-2]
+    #
+    #     y[i] = rides
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -85,28 +104,35 @@ if __name__ == "__main__":
 
     # Extract 'y'
     rides_test = test['POLYLINE'].values
+    rides_test = list(map(eval, rides_test))
 
-    X_test = list(map(eval, rides_test[:-1]))
-    
+
+    X_test = []
+    for i in range(len(rides_test)):
+        if len(rides_test[i]) < 2:
+            X_test.append(rides_test[i][0])
+        else:
+            X_test.append(rides_test[i][-2])
+
 
     # # How to make timestamp nicer
     # clean_timestamp = pd.to_datetime(data["TIMESTAMP"], unit="s")  
     
     # Training
-    dtr = DecisionTreeRegressor()
+    dtr = KNeighborsRegressor()
     
     #for i in range(len(X)):
     dtr.fit(X, y)
 
-        # Prediction
-    y_predict = dtr.predict(X_test[i])
+    # Prediction
+    y_predict = dtr.predict(X_test)
 
     result = np.zeros((n_trip_test, 2))
 
-    # for i in range(n_trip_test):
-    #     result[i, 0] = LATITUDE
-    #     result[i, 1] = LONGITUDE
-    #
-    # # Write submission
-    # print_submission(trip_id=trip_id, result=result, name="sampleSubmission_generated")
+    for i in range(len(y_predict)):
+        result[i, 0] = y_predict[i][1]
+        result[i, 1] = y_predict[i][0]
+
+    # Write submission
+    print_submission(trip_id=trip_id, result=result, name="sampleSubmission_generated")
     
