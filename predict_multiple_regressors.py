@@ -37,7 +37,7 @@ def expand_list(l, final_size):
     repeated_list = []
     repeated_list.extend(l)
 
-    mult_each_el = floor(final_size/l_size)
+    mult_each_el = int(floor(final_size/l_size))
     remaining = final_size - (mult_each_el * l_size)
 
     t1 = []
