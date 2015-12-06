@@ -16,6 +16,7 @@ import datetime
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.cross_validation import KFold
 
 
 def print_submission(trip_id, result, name):
@@ -122,7 +123,7 @@ if __name__ == "__main__":
         origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
         length_rides.append(dist)
 
-    knn_len = DecisionTreeRegressor()
+    knn_len = KNeighborsRegressor(n_neighbors=51)
     knn_len.fit(origins, length_rides)
 
     rides_test = test_data['POLYLINE'].values
@@ -143,3 +144,4 @@ if __name__ == "__main__":
 
         accuracies[i] = abs(dist-predicted_len)
 
+    distances = [len(rides_test[i]) for i in range(len(rides_test))]
