@@ -65,7 +65,7 @@ def expand_list(l, final_size):
 if __name__ == "__main__":
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=400000)
+    data = pd.read_csv('test.csv', index_col="TRIP_ID", nrows=40)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             data.drop(data.index[i])
     '''
 
-    #print(data.describe())
+    print(data.describe())
     #print(data.head(6))
 
     X_lat = []
