@@ -57,10 +57,12 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "DAY_TYPE", "TIMESTAMP"]
+    predictors0 = ["ORIGIN_CALL","TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
+    predictors1 = ["ORIGIN_STAND","TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
+    predictors2 = ["TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID",nrows=40000)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -107,7 +109,9 @@ if __name__ == "__main__":
     longest_ride_length = 0
 
     # X,y used to predict the path
-    origins = []
+    origins0 = []
+    origins1 = []
+    origins2 = []
     length_rides = []
 
     # For each ride
@@ -142,8 +146,15 @@ if __name__ == "__main__":
         else:
             X_plus.append([long, lat])
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
-
-        origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
+        if data["CALL_TYPE"][i] == 0:
+            origins0.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors0])
+        elif data["CALL_TYPE"][i] == 1:
+            origins1.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors1])
+        else:
+            origins2.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors2])            
+            
+            
+            
         length_rides.append(dist)
 
     # Correct X_plus (i.e. expand long and lat)
@@ -160,9 +171,16 @@ if __name__ == "__main__":
     knn_50.fit(X_50, y_50)
     knn_100.fit(X_100, y_100)
     knn_plus.fit(X_plus, y_plus)
-
-    knn_len = DecisionTreeRegressor()
-    knn_len.fit(origins, length_rides)
+    
+    
+    knn_len0 = DecisionTreeRegressor()
+    knn_len0.fit(origins0, length_rides)
+    
+    knn_len1 = DecisionTreeRegressor()
+    knn_len1.fit(origins1, length_rides)
+    
+    knn_len2 = DecisionTreeRegressor()
+    knn_len2.fit(origins2, length_rides)
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -211,8 +229,17 @@ if __name__ == "__main__":
         X_long_test_tmp = []
 
         # Predict the length of the path
-        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
-        predicted_len = knn_len.predict(c.reshape(1,-1))
+        if test["CALL_TYPE"] == 0:
+            c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors0])
+            predicted_len = knn_len0.predict(c.reshape(1,-1))
+        elif test["CALL_TYPE"] == 1:
+            c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors1])
+            predicted_len = knn_len1.predict(c.reshape(1,-1))
+        else:
+            c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors2])
+            predicted_len = knn_len2.predict(c.reshape(1,-1))
+            
+            
         predicted_len = predicted_len[0]
 
         # In case the predicted length is smaller than what's provided
