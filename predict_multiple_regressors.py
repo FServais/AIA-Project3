@@ -54,17 +54,10 @@ def from_time_to_day_period(row):
     st = datetime.datetime.fromtimestamp(row["TIMESTAMP"]).strftime('%H')
     hour = int(st)
 
-    if hour <= 6:
-        return 0
-    elif hour <= 12:
-        return 1
-    elif hour <= 17:
-        return 2
-    else:
-        return 3
+    return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "ORIGIN_CALL", "ORIGIN_STAND", "TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
+    predictors = ["CALL_TYPE", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
     data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
