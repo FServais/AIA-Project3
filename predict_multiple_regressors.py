@@ -1,6 +1,14 @@
+# Only py3 / so that 2 / 3 = 0.66..
+from __future__ import division
+# Only py3 string encoding
+from __future__ import unicode_literals
+# Only py3 print
+from __future__ import print_function
+
 import numpy as np
 import pandas as pd
-
+from sklearn import cross_validation, grid_search
+from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from itertools import repeat
 from math import floor
@@ -10,6 +18,7 @@ from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
+
 def print_submission(trip_id, result, name):
     n_line, n_columns = result.shape
     with open(name + '.txt', 'w') as f:
@@ -17,6 +26,7 @@ def print_submission(trip_id, result, name):
         for i in range(n_line):
             line = '"{}",{},{}\n'.format(trip_id[i], result[i,0], result[i,1])
             f.write(line)
+
 
 def get_last_coordinate(l):
     """
@@ -26,8 +36,10 @@ def get_last_coordinate(l):
     """
     return l[-1]
 
+
 def repeat_list(l, times_repeated):
     return [x for item in l for x in repeat(item, times_repeated)]
+
 
 def expand_list(l, final_size):
     l_size = len(l)
@@ -37,7 +49,7 @@ def expand_list(l, final_size):
     repeated_list = []
     repeated_list.extend(l)
 
-    mult_each_el = floor(final_size/l_size)
+    mult_each_el = int(floor(final_size/l_size))
     remaining = final_size - (mult_each_el * l_size)
 
     t1 = []
@@ -57,9 +69,10 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "DAY_TYPE", "TIMESTAMP"]
+    predictors = ["CALL_TYPE", "DAY_TYPE", "TAXI_ID", "TIMESTAMP"]
 
     # Data Loading
+    TRAIN_SET_SIZE = 10000
     data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
@@ -151,17 +164,17 @@ if __name__ == "__main__":
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = DecisionTreeRegressor()
-    knn_50 = DecisionTreeRegressor()
-    knn_100 = DecisionTreeRegressor()
-    knn_plus = DecisionTreeRegressor()
+    knn_25 = RandomForestRegressor(n_jobs=-1)
+    knn_50 = RandomForestRegressor(n_jobs=-1)
+    knn_100 = RandomForestRegressor(n_jobs=-1)
+    knn_plus = RandomForestRegressor(n_jobs=-1)
 
     knn_25.fit(X_25, y_25)
     knn_50.fit(X_50, y_50)
     knn_100.fit(X_100, y_100)
     knn_plus.fit(X_plus, y_plus)
 
-    knn_len = DecisionTreeRegressor()
+    knn_len = KNeighborsRegressor(n_neighbors=51)
     knn_len.fit(origins, length_rides)
 
     # Test Set Loading
