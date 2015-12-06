@@ -1,15 +1,14 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
+import numpy as np
+import pandas as pd
 
-# How to use this function?
-# trip_id is the first column of the submission, i.e., the id of the sample
-# result is a two-column matrix made of rows of "Latitude"x"Longitude" pairs.
-# 		Note that the line "result[i,:]" should correspond to id "trip_id[i]"
-# name is the name you want for your submission file
+from sklearn.neighbors import KNeighborsRegressor
+from itertools import repeat
+from math import floor
+import datetime
+
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
-
 
 def print_submission(trip_id, result, name):
     n_line, n_columns = result.shape
@@ -18,17 +17,6 @@ def print_submission(trip_id, result, name):
         for i in range(n_line):
             line = '"{}",{},{}\n'.format(trip_id[i], result[i,0], result[i,1])
             f.write(line)
-
-
-# As an example, when you call "toy_script" as a script,
-# it will produce the file "sampleSubmission.csv"
-
-import numpy as np
-import pandas as pd
-
-from sklearn.neighbors import KNeighborsRegressor
-from itertools import repeat
-from math import floor
 
 def get_last_coordinate(l):
     """
@@ -62,7 +50,21 @@ def expand_list(l, final_size):
     return t1 + t2
 
 
+def from_time_to_day_period(row):
+    st = datetime.datetime.fromtimestamp(row["TIMESTAMP"]).strftime('%H')
+    hour = int(st)
+
+    if hour <= 6:
+        return 0
+    elif hour <= 12:
+        return 1
+    elif hour <= 17:
+        return 2
+    else:
+        return 3
+
 if __name__ == "__main__":
+    predictors = ["CALL_TYPE", "ORIGIN_CALL", "ORIGIN_STAND", "TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
     data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
@@ -84,12 +86,14 @@ if __name__ == "__main__":
     # MISSING_DATA
     data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
     data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-    
+
+    data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
+
     data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
     
     data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
 
-    #Delete all the datas which have missing data in their paths
+    # Delete all the datas which have missing data in their paths
     data = data[data["MISSING_DATA"] != 1]
 
     # Extract 'y' and long and lat
@@ -146,7 +150,7 @@ if __name__ == "__main__":
             X_plus.append([long, lat])
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
 
-        origins.append([rides[i][0][0], rides[i][0][1]])
+        origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
         length_rides.append(dist)
 
     # Correct X_plus (i.e. expand long and lat)
@@ -173,6 +177,28 @@ if __name__ == "__main__":
     print('Shape of test data: {}'.format(test.shape))
     trip_id = list(test.index)
 
+    # Replace non-numeric values
+
+    # CALL_TYPE
+    test.loc[test["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
+    test.loc[test["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
+    test.loc[test["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
+
+    # DAY_TYPE
+    test.loc[test["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
+    test.loc[test["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
+    test.loc[test["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
+
+    # MISSING_DATA
+    test.loc[test["MISSING_DATA"] == True, "MISSING_DATA"] = 1
+    test.loc[test["MISSING_DATA"] == False, "MISSING_DATA"] = 0
+
+    test["TIMESTAMP"] = test.apply(from_time_to_day_period, axis=1)
+
+    test["ORIGIN_CALL"] = test["ORIGIN_CALL"].fillna(round(test["ORIGIN_CALL"].mean()))
+
+    test["ORIGIN_STAND"] = test["ORIGIN_STAND"].fillna(round(test["ORIGIN_STAND"].mean()))
+
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
 
@@ -192,7 +218,7 @@ if __name__ == "__main__":
         X_long_test_tmp = []
 
         # Predict the length of the path
-        c = np.array([rides_test[i][0][0], rides_test[i][0][1]])
+        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
         predicted_len = knn_len.predict(c.reshape(1,-1))
         predicted_len = predicted_len[0]
 
