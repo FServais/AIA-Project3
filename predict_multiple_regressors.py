@@ -62,7 +62,8 @@ if __name__ == "__main__":
     predictors2 = ["TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=1100000)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    data = data.sample(frac=0.5)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -157,20 +158,16 @@ if __name__ == "__main__":
         else:
             origins2.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors2])
             length_rides2.append(dist)
-            
-            
-            
-
 
     # Correct X_plus (i.e. expand long and lat)
     for i in range(len(X_plus)):
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = ExtraTreesRegressor()
-    knn_50 = ExtraTreesRegressor()
-    knn_100 = ExtraTreesRegressor()
-    knn_plus = ExtraTreesRegressor()
+    knn_25 = RandomForestRegressor(n_estimators=500, n_jobs=-1)
+    knn_50 = RandomForestRegressor(n_estimators=500, n_jobs=-1)
+    knn_100 = RandomForestRegressor(n_estimators=500, n_jobs=-1)
+    knn_plus = RandomForestRegressor(n_estimators=500, n_jobs=-1)
 
     knn_25.fit(X_25, y_25)
     knn_50.fit(X_50, y_50)
