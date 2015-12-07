@@ -72,32 +72,32 @@ if __name__ == "__main__":
     predictors = ["CALL_TYPE", "DAY_TYPE", "TAXI_ID", "TIMESTAMP"]
 
     # Data Loading
-    TRAIN_SET_SIZE = 10000
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+@    TRAIN_SET_SIZE = 1500000
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=TRAIN_SET_SIZE)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
     # Replace non-numeric values
-
-    # CALL_TYPE
-    data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-    data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-    data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
-
-    # DAY_TYPE
-    data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-    data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-    data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
-
-    # MISSING_DATA
-    data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
-    data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-
-    data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
-
-    data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
-    
-    data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
+    #
+    # # CALL_TYPE
+    # data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
+    # data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
+    # data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
+    #
+    # # DAY_TYPE
+    # data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
+    # data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
+    # data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
+    #
+    # # MISSING_DATA
+    # data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
+    # data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
+    #
+    # data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
+    #
+    # data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
+    #
+    # data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
 
     # Delete all the datas which have missing data in their paths
     data = data[data["MISSING_DATA"] != 1]
@@ -156,7 +156,8 @@ if __name__ == "__main__":
             X_plus.append([long, lat])
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
 
-        origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
+        # origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
+        origins.append([rides[i][0][0], rides[i][0][1]])
         length_rides.append(dist)
 
     # Correct X_plus (i.e. expand long and lat)
@@ -184,26 +185,26 @@ if __name__ == "__main__":
     trip_id = list(test.index)
 
     # Replace non-numeric values
-
-    # CALL_TYPE
-    test.loc[test["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-    test.loc[test["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-    test.loc[test["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
-
-    # DAY_TYPE
-    test.loc[test["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-    test.loc[test["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-    test.loc[test["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
-
-    # MISSING_DATA
-    test.loc[test["MISSING_DATA"] == True, "MISSING_DATA"] = 1
-    test.loc[test["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-
-    test["TIMESTAMP"] = test.apply(from_time_to_day_period, axis=1)
-
-    test["ORIGIN_CALL"] = test["ORIGIN_CALL"].fillna(round(test["ORIGIN_CALL"].mean()))
-
-    test["ORIGIN_STAND"] = test["ORIGIN_STAND"].fillna(round(test["ORIGIN_STAND"].mean()))
+    #
+    # # CALL_TYPE
+    # test.loc[test["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
+    # test.loc[test["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
+    # test.loc[test["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
+    #
+    # # DAY_TYPE
+    # test.loc[test["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
+    # test.loc[test["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
+    # test.loc[test["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
+    #
+    # # MISSING_DATA
+    # test.loc[test["MISSING_DATA"] == True, "MISSING_DATA"] = 1
+    # test.loc[test["MISSING_DATA"] == False, "MISSING_DATA"] = 0
+    #
+    # test["TIMESTAMP"] = test.apply(from_time_to_day_period, axis=1)
+    #
+    # test["ORIGIN_CALL"] = test["ORIGIN_CALL"].fillna(round(test["ORIGIN_CALL"].mean()))
+    #
+    # test["ORIGIN_STAND"] = test["ORIGIN_STAND"].fillna(round(test["ORIGIN_STAND"].mean()))
 
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
@@ -224,7 +225,8 @@ if __name__ == "__main__":
         X_long_test_tmp = []
 
         # Predict the length of the path
-        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
+        # c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
+        c = np.array([rides_test[i][0][0], rides_test[i][0][1]])
         predicted_len = knn_len.predict(c.reshape(1,-1))
         predicted_len = predicted_len[0]
 
