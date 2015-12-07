@@ -161,7 +161,7 @@ if __name__ == "__main__":
     knn_100.fit(X_100, y_100)
     knn_plus.fit(X_plus, y_plus)
 
-    knn_len = DecisionTreeRegressor()
+    knn_len = KNeighborsRegressor(n_neighbors = 51)
     knn_len.fit(origins, length_rides)
 
     # Test Set Loading
@@ -223,24 +223,33 @@ if __name__ == "__main__":
         for coord in rides_test[i]:
             X_long_test_tmp.append(coord[0])
             X_lat_test_tmp.append(coord[1])
+        a = dist
+        print a
+        while dist <= predicted_len:
 
-        # Predict the point
-        if predicted_len <= 25:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25))
-            prediction = knn_25.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
-        elif predicted_len <= 50:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50))
-            prediction = knn_50.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
-        elif predicted_len <= 100:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100))
-            prediction = knn_100.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
-        else:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length))
-            prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
+            # Predict the point
+            if predicted_len <= 25:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25))
+                prediction = knn_25.predict(X_to_predict.reshape(1,-1))
+                #y_predict.append(prediction[0])
+            elif predicted_len <= 50:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50))
+                prediction = knn_50.predict(X_to_predict.reshape(1,-1))
+                #y_predict.append(prediction[0])
+            elif predicted_len <= 100:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100))
+                prediction = knn_100.predict(X_to_predict.reshape(1,-1))
+                #y_predict.append(prediction[0])
+            else:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length))
+                prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
+                #y_predict.append(prediction[0])
+            print X_to_predict    
+            X_long_test_tmp.append(prediction[0][0])
+            X_lat_test_tmp.append(prediction[0][1])
+            
+            dist = len(X_long_test_tmp)
+        y_predict.append(prediction[0])
 
     result = np.zeros((n_trip_test, 2))
 
