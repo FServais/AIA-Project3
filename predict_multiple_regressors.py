@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, ExtraTreesRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from itertools import repeat
 from math import floor
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     predictors2 = ["TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=1100000)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -167,10 +167,10 @@ if __name__ == "__main__":
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = RandomForestRegressor(n_jobs=-1)
-    knn_50 = RandomForestRegressor(n_jobs=-1)
-    knn_100 = RandomForestRegressor(n_jobs=-1)
-    knn_plus = RandomForestRegressor(n_jobs=-1)
+    knn_25 = ExtraTreesRegressor()
+    knn_50 = ExtraTreesRegressor()
+    knn_100 = ExtraTreesRegressor()
+    knn_plus = ExtraTreesRegressor()
 
     knn_25.fit(X_25, y_25)
     knn_50.fit(X_50, y_50)
