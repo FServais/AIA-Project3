@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from itertools import repeat
 from math import floor
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     predictors2 = ["TAXI_ID", "DAY_TYPE", "TIMESTAMP"]
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID",nrows=40000)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -112,7 +112,9 @@ if __name__ == "__main__":
     origins0 = []
     origins1 = []
     origins2 = []
-    length_rides = []
+    length_rides0 = []
+    length_rides1 = []
+    length_rides2 = []
 
     # For each ride
     for i in range(len(rides)):
@@ -146,26 +148,29 @@ if __name__ == "__main__":
         else:
             X_plus.append([long, lat])
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
-        if data["CALL_TYPE"][i] == 0:
+        if data["CALL_TYPE"].iloc[i] == 0:
             origins0.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors0])
-        elif data["CALL_TYPE"][i] == 1:
+            length_rides0.append(dist)
+        elif data["CALL_TYPE"].iloc[i] == 1:
             origins1.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors1])
+            length_rides1.append(dist)
         else:
-            origins2.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors2])            
+            origins2.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors2])
+            length_rides2.append(dist)
             
             
             
-        length_rides.append(dist)
+
 
     # Correct X_plus (i.e. expand long and lat)
     for i in range(len(X_plus)):
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = DecisionTreeRegressor()
-    knn_50 = DecisionTreeRegressor()
-    knn_100 = DecisionTreeRegressor()
-    knn_plus = DecisionTreeRegressor()
+    knn_25 = RandomForestRegressor(n_jobs=-1)
+    knn_50 = RandomForestRegressor(n_jobs=-1)
+    knn_100 = RandomForestRegressor(n_jobs=-1)
+    knn_plus = RandomForestRegressor(n_jobs=-1)
 
     knn_25.fit(X_25, y_25)
     knn_50.fit(X_50, y_50)
@@ -174,13 +179,13 @@ if __name__ == "__main__":
     
     
     knn_len0 = DecisionTreeRegressor()
-    knn_len0.fit(origins0, length_rides)
+    knn_len0.fit(origins0, length_rides0)
     
     knn_len1 = DecisionTreeRegressor()
-    knn_len1.fit(origins1, length_rides)
+    knn_len1.fit(origins1, length_rides1)
     
     knn_len2 = DecisionTreeRegressor()
-    knn_len2.fit(origins2, length_rides)
+    knn_len2.fit(origins2, length_rides2)
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -229,10 +234,10 @@ if __name__ == "__main__":
         X_long_test_tmp = []
 
         # Predict the length of the path
-        if test["CALL_TYPE"] == 0:
+        if test["CALL_TYPE"].iloc[i] == 0:
             c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors0])
             predicted_len = knn_len0.predict(c.reshape(1,-1))
-        elif test["CALL_TYPE"] == 1:
+        elif test["CALL_TYPE"].iloc[i] == 1:
             c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors1])
             predicted_len = knn_len1.predict(c.reshape(1,-1))
         else:
