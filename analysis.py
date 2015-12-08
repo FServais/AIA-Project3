@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     kf = KFold(len(data), n_folds=3)
 
-    max_depths = [4, 5, 6, 7, 8, 9, 10]
+    max_depths = np.arange(11, 40, 5)
 
     for max_depth in max_depths:
         b = []
