@@ -72,8 +72,9 @@ if __name__ == "__main__":
     predictors = ["CALL_TYPE", "DAY_TYPE", "TAXI_ID", "TIMESTAMP"]
 
     # Data Loading
-@    TRAIN_SET_SIZE = 1500000
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=TRAIN_SET_SIZE)
+    # TRAIN_SET_SIZE = 1500000
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    data = data.sample(frac=0.05)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -165,17 +166,17 @@ if __name__ == "__main__":
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = RandomForestRegressor(n_jobs=-1)
-    knn_50 = RandomForestRegressor(n_jobs=-1)
-    knn_100 = RandomForestRegressor(n_jobs=-1)
-    knn_plus = RandomForestRegressor(n_jobs=-1)
+    knn_25 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
+    knn_50 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
+    knn_100 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
+    knn_plus = RandomForestRegressor(n_estimators=50, n_jobs=-1)
 
     knn_25.fit(X_25, y_25)
     knn_50.fit(X_50, y_50)
     knn_100.fit(X_100, y_100)
     knn_plus.fit(X_plus, y_plus)
 
-    knn_len = KNeighborsRegressor(n_neighbors=51)
+    knn_len = DecisionTreeRegressor(max_depth=10)
     knn_len.fit(origins, length_rides)
 
     # Test Set Loading
