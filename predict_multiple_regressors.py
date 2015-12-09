@@ -15,10 +15,8 @@ from math import floor
 import datetime
 
 from sklearn.linear_model import LinearRegression, Lasso
-from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
-from sknn.mlp import Regressor
-from sknn.nn import Layer
+from sknn.mlp import Regressor, Layer
 
 
 def print_submission(trip_id, result, name):
@@ -76,7 +74,7 @@ if __name__ == "__main__":
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
     data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
-    data = data.sample(frac=0.05)
+    # data = data.sample(frac=0.05)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -120,7 +118,7 @@ if __name__ == "__main__":
     y_100 = []
     y_plus = []
 
-    longest_ride_length = 0
+    longest_ride_length = 3400
 
     # X,y used to predict the path
     origins = []
@@ -134,8 +132,8 @@ if __name__ == "__main__":
             continue
 
         # Find length of the longest ride
-        if dist > longest_ride_length:
-            longest_ride_length = dist
+        # if dist > longest_ride_length:
+        #     longest_ride_length = dist
 
         # Split LAT/LONG
         long = []
