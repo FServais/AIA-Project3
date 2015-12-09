@@ -17,6 +17,8 @@ import datetime
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sknn.mlp import Regressor
+from sknn.nn import Layer
 
 
 def print_submission(trip_id, result, name):
@@ -166,15 +168,15 @@ if __name__ == "__main__":
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
 
     # Training
-    knn_25 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
-    knn_50 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
-    knn_100 = RandomForestRegressor(n_estimators=50, n_jobs=-1)
-    knn_plus = RandomForestRegressor(n_estimators=50, n_jobs=-1)
+    knn_25 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
+    knn_50 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
+    knn_100 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
+    knn_plus = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
 
-    knn_25.fit(X_25, y_25)
-    knn_50.fit(X_50, y_50)
-    knn_100.fit(X_100, y_100)
-    knn_plus.fit(X_plus, y_plus)
+    knn_25.fit(np.array(X_25), np.array(y_25))
+    knn_50.fit(np.array(X_50), np.array(y_50))
+    knn_100.fit(np.array(X_100), np.array(y_100))
+    knn_plus.fit(np.array(X_plus), np.array(y_plus))
 
     knn_len = DecisionTreeRegressor(max_depth=10)
     knn_len.fit(origins, length_rides)
