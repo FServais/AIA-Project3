@@ -10,3 +10,7 @@ train_data.csv
 .idea/workspace.xml
 sampleSubmission_generated.txt
 test_mult_sampleSubmission_generated.txt
+data_pickle.pkl
+data_pickle.pkl.zip
+dir_data_pickle.pkl
+dir_test_pickle.pkl

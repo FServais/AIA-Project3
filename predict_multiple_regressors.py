@@ -73,8 +73,8 @@ if __name__ == "__main__":
 
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
-    # data = data.sample(frac=0.05)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=50000)
+    data = data.sample(frac=0.5)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -118,17 +118,19 @@ if __name__ == "__main__":
     y_100 = []
     y_plus = []
 
-    longest_ride_length = 3400
+    longest_ride_length = 3390
 
     # X,y used to predict the path
     origins = []
     length_rides = []
 
+    print("Preprocessing")
+
     # For each ride
     for i in range(len(rides)):
         dist = len(rides[i])
 
-        if dist <= 1:
+        if dist <= 2:
             continue
 
         # Find length of the longest ride
@@ -164,12 +166,17 @@ if __name__ == "__main__":
     # Correct X_plus (i.e. expand long and lat)
     for i in range(len(X_plus)):
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
+        if len(X_plus[i]) != 2*longest_ride_length:
+            X_plus[i] = X_plus[i-1]
+            length_rides[i] = length_rides[i-1]
+
+    print("Training")
 
     # Training
-    knn_25 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
-    knn_50 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
-    knn_100 = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
-    knn_plus = Regressor(layers=[Layer("Rectifier", units=100), Layer("Linear")], learning_rate=0.2,n_iter=10)
+    knn_25 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
+    knn_50 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
+    knn_100 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
+    knn_plus = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
 
     knn_25.fit(np.array(X_25), np.array(y_25))
     knn_50.fit(np.array(X_50), np.array(y_50))
@@ -209,6 +216,8 @@ if __name__ == "__main__":
 
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
+
+    print("Test preprocessing")
 
     X_test = []
     X_long_test = []
@@ -258,6 +267,7 @@ if __name__ == "__main__":
             prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
 
+    print("Writing")
     result = np.zeros((n_trip_test, 2))
 
     for i in range(len(y_predict)):
