@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 # Only py3 print
 from __future__ import print_function
 
+from math import *
 import pandas as pd
 import datetime
 import numpy as np
@@ -14,6 +15,18 @@ def from_time_to_day_period(row):
     hour = int(st)
 
     return hour  
+
+
+def bearing(lon1, lat1, lon2, lat2):
+    lon1, lat1, lon2, lat2 = list(map(radians, [lon1, lat1, lon2, lat2]))
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+
+    bearing_ = atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), sin(lon2-lon1)*cos(lat2))
+    return (degrees(bearing_) + 360) % 360
 
 if __name__ == "__main__":
 
@@ -48,49 +61,49 @@ if __name__ == "__main__":
     rides = list(map(eval, rides))
 
     test['POLYLINE'] = rides
-
-    test["DIRECTION"] = 0
-    # Delete all the datas which have missing data in their paths
-    test = test[test["MISSING_DATA"] != 1]
-    for i in range(len(rides)):
-        dist = len(rides[i])
-
-        if dist <= 1:
-            continue
-
-        #Compute the direction
-
-        if dist > 1:
-            dist1 = np.linalg.norm(np.asarray(rides[i][-2])-np.asarray(rides[i][0]))
-            if dist1 == 0:
-                dist1 = 0.0000001
-            tmp = rides[i][-2]
-            tmp[0] = rides[i][0][0]
-            dist2 = np.linalg.norm(np.asarray(tmp)-np.asarray(rides[i][0]))
-
-            tmp_angle = np.arccos(dist2/dist1)*(180/np.pi)
-
-            if rides[i][-2][1] >= rides[i][0][1]:
-                if rides[i][-2][0] >= rides[i][0][0]:
-                    tmp_angle =tmp_angle
-                else:
-                    tmp_angle = 180-tmp_angle
-            else:
-                if rides[i][-2][0] >= rides[i][0][0]:
-                    tmp_angle = 360-tmp_angle
-                else:
-                    tmp_angle = 270-tmp_angle
-
-            test["DIRECTION"].iloc[i] = tmp_angle
+    test['DIRECTION'] = test["POLYLINE"].apply(lambda row: bearing(row[0][0], row[0][1], row[-1][0], row[-1][1]))
+    # test["DIRECTION"] = 0
+    # # Delete all the datas which have missing data in their paths
+    # test = test[test["MISSING_DATA"] != 1]
+    # for i in range(len(rides)):
+    #     dist = len(rides[i])
+    #
+    #     if dist <= 1:
+    #         continue
+    #
+    #     #Compute the direction
+    #
+    #     if dist > 1:
+    #         dist1 = np.linalg.norm(np.asarray(rides[i][-2])-np.asarray(rides[i][0]))
+    #         if dist1 == 0:
+    #             dist1 = 0.0000001
+    #         tmp = rides[i][-2]
+    #         tmp[0] = rides[i][0][0]
+    #         dist2 = np.linalg.norm(np.asarray(tmp)-np.asarray(rides[i][0]))
+    #
+    #         tmp_angle = np.arccos(dist2/dist1)*(180/np.pi)
+    #
+    #         if rides[i][-2][1] >= rides[i][0][1]:
+    #             if rides[i][-2][0] >= rides[i][0][0]:
+    #                 tmp_angle =tmp_angle
+    #             else:
+    #                 tmp_angle = 180-tmp_angle
+    #         else:
+    #             if rides[i][-2][0] >= rides[i][0][0]:
+    #                 tmp_angle = 360-tmp_angle
+    #             else:
+    #                 tmp_angle = 270-tmp_angle
+    #
+    #         test["DIRECTION"].iloc[i] = tmp_angle
 
     test.to_pickle('dir_test_pickle.pkl')
 
     print("End of conversion")
 
     # Data Loading
-    data = pd.read_pickle('dir_test_pickle.pkl')
-    n_trip_train, _ = data.shape
-    print('Shape of test data: {}'.format(data.shape))
+    test = pd.read_pickle('dir_test_pickle.pkl')
+    n_trip_train, _ = test.shape
+    print('Shape of test data: {}'.format(test.shape))
 
 
     # Data Loading
@@ -119,44 +132,51 @@ if __name__ == "__main__":
     data = data[data["MISSING_DATA"] != 1]
     data = data[data["POLYLINE"].map(len) > 2]
 
+    print("Evaluate rides")
+
     # Extract 'y' and long and lat
     rides = data['POLYLINE'].values
     rides = list(map(eval, rides))
 
+    print("Insert rides")
     data['POLYLINE'] = rides
 
-    data["DIRECTION"]=0
-    # Delete all the datas which have missing data in their paths
-    for i in range(len(rides)):
+    print("Compute DIRECTION")
+    data['DIRECTION'] = data["POLYLINE"].apply(lambda row: bearing(row[0][0], row[0][1], row[-1][0], row[-1][1]))
+    #
+    # data["DIRECTION"]=0
+    # # Delete all the datas which have missing data in their paths
+    # for i in range(len(rides)):
+    #
+    #     dist = len(rides[i])
+    #
+    #     if dist <= 1:
+    #         continue
+    #
+    #     # Compute the direction
+    #     dist1 = np.linalg.norm(np.asarray(rides[i][-2])-np.asarray(rides[i][0]))
+    #     if dist1 == 0:
+    #         dist1 = 0.0000001
+    #     tmp = rides[i][-2]
+    #     tmp[0] = rides[i][0][0]
+    #     dist2 = np.linalg.norm(np.asarray(tmp)-np.asarray(rides[i][0]))
+    #
+    #     tmp_angle = np.arccos(dist2/dist1)*(180/np.pi)
+    #
+    #     if rides[i][-2][1] >= rides[i][0][1]:
+    #         if rides[i][-2][0] >= rides[i][0][0]:
+    #             tmp_angle =tmp_angle
+    #         else:
+    #             tmp_angle = 180-tmp_angle
+    #     else:
+    #         if rides[i][-2][0] >= rides[i][0][0]:
+    #             tmp_angle = 360-tmp_angle
+    #         else:
+    #             tmp_angle = 270-tmp_angle
+    #
+    #     data["DIRECTION"].iloc[i] = tmp_angle
 
-        dist = len(rides[i])
-
-        if dist <= 1:
-            continue
-
-        # Compute the direction
-        dist1 = np.linalg.norm(np.asarray(rides[i][-2])-np.asarray(rides[i][0]))
-        if dist1 == 0:
-            dist1 = 0.0000001
-        tmp = rides[i][-2]
-        tmp[0] = rides[i][0][0]
-        dist2 = np.linalg.norm(np.asarray(tmp)-np.asarray(rides[i][0]))
-
-        tmp_angle = np.arccos(dist2/dist1)*(180/np.pi)
-
-        if rides[i][-2][1] >= rides[i][0][1]:
-            if rides[i][-2][0] >= rides[i][0][0]:
-                tmp_angle =tmp_angle
-            else:
-                tmp_angle = 180-tmp_angle
-        else:
-            if rides[i][-2][0] >= rides[i][0][0]:
-                tmp_angle = 360-tmp_angle
-            else:
-                tmp_angle = 270-tmp_angle
-
-        data["DIRECTION"].iloc[i] = tmp_angle
-
+    print("Saving...")
     data.to_pickle('dir_data_pickle.pkl')
 
     print("End of conversion")
