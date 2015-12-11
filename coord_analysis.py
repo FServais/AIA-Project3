@@ -64,9 +64,8 @@ def expand_list(l, final_size):
 
 if __name__ == "__main__":
 
-    data_read = pd.read_pickle('data_pickle.pkl')
+    data_read = pd.read_pickle('dir_data_pickle.pkl')
     data = data_read.sample(frac=0.05)
-    data = data[data["POLYLINE"].map(len) > 1]
 
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))

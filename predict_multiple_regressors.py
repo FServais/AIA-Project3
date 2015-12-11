@@ -69,7 +69,7 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "DAY_TYPE", "TAXI_ID", "TIMESTAMP"]
+    predictors = ["CALL_TYPE", "TAXI_ID", "TIMESTAMP", "DIRECTION"]
 
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     for i in range(len(rides)):
         dist = len(rides[i])
 
-        if dist <= 2:
+        if dist < 2:
             continue
 
         # Find length of the longest ride
@@ -145,27 +145,29 @@ if __name__ == "__main__":
             long.append(rides[i][c][0])
             lat.append(rides[i][c][1])
 
+        preds = [data[f].iloc[i] for f in predictors]
+
         # Add the data to the corresponding <X,y>
         if dist <= 25:
-            X_25.append(expand_list(long, 25) + expand_list(lat, 25))
+            X_25.append(expand_list(long, 25) + expand_list(lat, 25) + preds)
             y_25.append([rides[i][-1][0], rides[i][-1][1]])
         elif dist <= 50:
-            X_50.append(expand_list(long, 50) + expand_list(lat, 50))
+            X_50.append(expand_list(long, 50) + expand_list(lat, 50) + preds)
             y_50.append([rides[i][-1][0], rides[i][-1][1]])
         elif dist <= 100:
-            X_100.append(expand_list(long, 100) + expand_list(lat, 100))
+            X_100.append(expand_list(long, 100) + expand_list(lat, 100) + preds)
             y_100.append([rides[i][-1][0], rides[i][-1][1]])
         else:
             X_plus.append([long, lat])
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
 
-        # origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
-        origins.append([rides[i][0][0], rides[i][0][1]])
+        origins.append([rides[i][0][0], rides[i][0][1]] + preds)
+        # origins.append([rides[i][0][0], rides[i][0][1]])
         length_rides.append(dist)
 
     # Correct X_plus (i.e. expand long and lat)
     for i in range(len(X_plus)):
-        X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
+        X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length) + [data[f].iloc[i] for f in predictors]
         if len(X_plus[i]) != 2*longest_ride_length:
             X_plus[i] = X_plus[i-1]
             length_rides[i] = length_rides[i-1]
@@ -173,10 +175,10 @@ if __name__ == "__main__":
     print("Training")
 
     # Training
-    knn_25 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
-    knn_50 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
-    knn_100 = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
-    knn_plus = Regressor(layers=[Layer("Rectifier", units=2), Layer("Sigmoid")])
+    knn_25 = DecisionTreeRegressor()
+    knn_50 = DecisionTreeRegressor()
+    knn_100 = DecisionTreeRegressor()
+    knn_plus = DecisionTreeRegressor()
 
     knn_25.fit(np.array(X_25), np.array(y_25))
     knn_50.fit(np.array(X_50), np.array(y_50))
@@ -185,6 +187,8 @@ if __name__ == "__main__":
 
     knn_len = DecisionTreeRegressor(max_depth=10)
     knn_len.fit(origins, length_rides)
+
+    print("End of training")
 
     # Test Set Loading
     test = pd.read_csv('test.csv', index_col="TRIP_ID")
@@ -235,8 +239,8 @@ if __name__ == "__main__":
         X_long_test_tmp = []
 
         # Predict the length of the path
-        # c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
-        c = np.array([rides_test[i][0][0], rides_test[i][0][1]])
+        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
+        # c = np.array([rides_test[i][0][0], rides_test[i][0][1]])
         predicted_len = knn_len.predict(c.reshape(1,-1))
         predicted_len = predicted_len[0]
 
