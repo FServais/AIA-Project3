@@ -4,8 +4,8 @@ import pandas as pd
 from sklearn.cross_validation import KFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
-from sklearn.feature_selection import SelectFromModel
+from sklearn import preprocessing
+from sklearn.ensemble import AdaBoostRegressor
 
 
 def bias(predicted, y_ls):
@@ -40,8 +40,8 @@ def from_time_to_day_period(row):
 
 if __name__ == "__main__":
 
-    data_read = pd.read_csv('train_data.csv', index_col="TRIP_ID")
-    data = data_read.sample(frac=0.05)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID",nrows=100000)
+    #data = data_read.sample(frac=0.05)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -72,50 +72,52 @@ if __name__ == "__main__":
     data = data[data["POLYLINE"] != '[]']
     data = data[["CALL_TYPE", "TAXI_ID", "DAY_TYPE", "TIMESTAMP", "POLYLINE"]]
     # data = data[["POLYLINE"]]
-    #data = data[[ "TAXI_ID", "TIMESTAMP", "POLYLINE"]]
+    lb = preprocessing.LabelBinarizer()
+    lb.fit(data["TAXI_ID"].values)
+    lb.classes_
+    taxiId= lb.transform(data["TAXI_ID"].values)
+
+    data = data[[ "TIMESTAMP","POLYLINE"]]
+    
+    for i in range(len(taxiId[0])):
+        data["A{}".format(i)] = taxiId[:,i]
 
     kf = KFold(len(data), n_folds=3)
 
-    max_depths = np.arange(10, 11, 1)
-    n_estimator = np.arange(36,37,1)
+    max_depths = np.arange(11, 13, 5)
 
     for max_depth in max_depths:
-    	for n_estimators in n_estimator:
-        	b = []
-		v = []
-		e = []
-		for train_index, test_index in kf:
-			X_ls = data.iloc[train_index]
-			rides_ls = extract_rides(X_ls)
-			origins_ls, lengths_ls = extract_origins_lengths(rides_ls)
-			X_ls.drop("POLYLINE",1,inplace=True)
-			X_ls["org_x"] = origins_ls[:,0]
-			X_ls["org_y"] = origins_ls[:,1]
-
-			regr = RandomForestRegressor(n_estimators=n_estimators,max_depth=max_depth, n_jobs=-1)
-
-			regr.fit(X_ls, lengths_ls)
-			weights = regr.feature_importances_
-			model = SelectFromModel(regr, prefit=True)
-			X_ls_new = model.transform(X_ls)
+        b = []
+        v = []
+        e = []
+        for train_index, test_index in kf:
+            X_ls = data.iloc[train_index]
+            rides_ls = extract_rides(X_ls)
+            origins_ls, lengths_ls = extract_origins_lengths(rides_ls)
+            X_ls.drop("POLYLINE",1,inplace=True)
+            X_ls["org_x"] = origins_ls[:,0]
+            X_ls["org_y"] = origins_ls[:,1]
 
 
-			X_test = data.iloc[test_index]
-			rides_test = extract_rides(X_test)
-			origins_test, lengths_test = extract_origins_lengths(rides_test)
-			X_test.drop("POLYLINE",1,inplace=True)
-			X_test["org_x"] = origins_test[:,0]
-			X_test["org_y"] = origins_test[:,1]
 
-			predict = regr.predict(X_test)
+            regr = AdaBoostRegressor(DecisionTreeClassifier(max_depth=max_depth))
+            #regr = DecisionTreeRegressor(max_depth=max_depth)
+            regr.fit(X_ls, lengths_ls)
+            
 
-			b.append(bias(predict, lengths_test))
-			v.append(var_ls(predict))
-			e.append(mae(np.array(predict), np.array(lengths_test)))
-		print("max_depth = {}".format(max_depth))
-		print("n_estimators = {}".format(n_estimators))
-		print("Bias: ", np.mean(b))
-		print("Variance: ", np.mean(v))
-		print("Mean absolute error: ", np.mean(e))
+            X_test = data.iloc[test_index]
+            rides_test = extract_rides(X_test)
+            origins_test, lengths_test = extract_origins_lengths(rides_test)
+            X_test.drop("POLYLINE",1,inplace=True)
+            X_test["org_x"] = origins_test[:,0]
+            X_test["org_y"] = origins_test[:,1]
 
+            predict = regr.predict(X_test)
 
+            b.append(bias(predict, lengths_test))
+            v.append(var_ls(predict))
+            e.append(mae(np.array(predict), np.array(lengths_test)))
+        print("max_depth = {}".format(max_depth))
+        print("Bias: ", np.mean(b))
+        print("Variance: ", np.mean(v))
+        print("Mean absolute error: ", np.mean(e))

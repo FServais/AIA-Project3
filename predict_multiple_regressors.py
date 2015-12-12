@@ -7,9 +7,13 @@ from math import floor
 import datetime
 import matplotlib.pyplot as plt
 
+import pickle
+
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sklearn import preprocessing
+
 
 def print_submission(trip_id, result, name):
     n_line, n_columns = result.shape
@@ -29,7 +33,7 @@ def toc():
     if 'startTime_for_tictoc' in globals():
         print("Elapsed time is " + str(time.time() - startTime_for_tictoc) + " seconds.")
     else:
-        print("Toc: start time not set")         
+        print("Toc: start time not set")
 
 def get_last_coordinate(l):
     """
@@ -70,16 +74,19 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    
+
     predictors = ["CALL_TYPE", "DAY_TYPE", "TIMESTAMP"]
     predictors_length = ["DIRECTION"]
 
     # Data Loading
     data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
-    #data = data_read.sample(frac=0.001)
+    data = data.sample(frac=0.1)
+    #data = pd.read_pickle('dir_data_pickle.pkl')
+    #data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
+    #data = data_read.sample(frac=0.05)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
-
+    
     # Replace non-numeric values
     # CALL_TYPE
     data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
@@ -98,20 +105,23 @@ if __name__ == "__main__":
 
     data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
     #data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
-    
+
     #data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
     print 3
-    
+
     data["DIRECTION"]=0
     # Delete all the datas which have missing data in their paths
     data = data[data["MISSING_DATA"] != 1]
-    print 4
+    lb = preprocessing.LabelBinarizer()
+    lb.fit(data["TAXI_ID"].values)
+    lb.classes_
+    taxiId= lb.transform(data["TAXI_ID"].values)
+    
     # Extract 'y' and long and lat
     rides = data['POLYLINE'].values
-    print 5
-    tic()
+
     rides = list(map(eval, rides))
-    toc()
+    
 
     # Separate inputs and outputs by number of features
     X_25 = []
@@ -132,17 +142,20 @@ if __name__ == "__main__":
 
     # For each ride
     for i in range(len(rides)):
-        
+
         if np.mod(i,1000)==0:
             print i
-            
-        
+
+
         dist = len(rides[i])
-        
+
         if dist <= 1:
             continue
-        
-        #Compute the direction        
+
+        #Compute the direction
+
+
+
         
         dist1 = np.linalg.norm(np.asarray(rides[i][-2])-np.asarray(rides[i][0]))
         if dist1 == 0:
@@ -150,9 +163,9 @@ if __name__ == "__main__":
         tmp = rides[i][-2]
         tmp[0] = rides[i][0][0]
         dist2 = np.linalg.norm(np.asarray(tmp)-np.asarray(rides[i][0]))
-        
+
         tmp_angle = np.arccos(dist2/dist1)*(180/np.pi)
-        
+
         if rides[i][-2][1] >= rides[i][0][1]:
             if rides[i][-2][0] >= rides[i][0][0]:
                 tmp_angle =tmp_angle
@@ -163,14 +176,15 @@ if __name__ == "__main__":
                 tmp_angle = 360-tmp_angle
             else:
                 tmp_angle = 270-tmp_angle
-            
-        
+
+
         data["DIRECTION"].iloc[i]= tmp_angle
         #data=data[data["DIRECTION"] != 0]
+        
         # Find length of the longest ride
         if dist > longest_ride_length:
             longest_ride_length = dist
-        
+
         # Split LAT/LONG
         long = []
         lat = []
@@ -194,52 +208,52 @@ if __name__ == "__main__":
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
 
         origins.append([rides[i][0][0], rides[i][0][1]] + [data[f].iloc[i] for f in predictors])
-        
+
         length_rides.append(dist)
-    
+
     # Correct X_plus (i.e. expand long and lat)
     for i in range(len(X_plus)):
         X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length)
-        
+
     print 1
     '''
     GRAPHE
     ------
-    
-        
+    '''
+
     hist_length_rides = np.zeros(longest_ride_length)
-    
+
     for i in range(len(length_rides)):
-        
-        hist_length_rides[length_rides[i]-1] += 1 
-    
-    plt.plot()        
+
+        hist_length_rides[length_rides[i]-1] += 1
+
+    plt.plot()
     plt.hist(hist_length_rides,100, normed=1, facecolor='b', alpha=0.5)
     tmp=0
-    born = len(length_rides)/4
+    born = len(length_rides)/6
     born_index = []
     for i in range(longest_ride_length):
         tmp += hist_length_rides[i]
         if tmp >= born:
             born_index.append(i+1)
-            born += len(length_rides)/4 
-        
-        
-    
-    
-    
+            born += len(length_rides)/6
+
+
+
+
+    '''
     ------
     '''
-    
-    
 
-    
+
+
+
     # Training
     knn_25 = DecisionTreeRegressor()
     knn_50 = DecisionTreeRegressor()
     knn_100 = DecisionTreeRegressor()
     knn_plus = DecisionTreeRegressor()
-	
+
     knn_25.fit(X_25, y_25)
     print 2
     knn_50.fit(X_50, y_50)
@@ -252,7 +266,7 @@ if __name__ == "__main__":
     knn_len = DecisionTreeRegressor()
     knn_len.fit(origins, length_rides)
     print 5
-    
+
     '''
     weights_25 = knn_25.feature_importances_
     weights_50 = knn_50.feature_importances_
@@ -267,7 +281,7 @@ if __name__ == "__main__":
     trip_id = list(test.index)
 
     # Replace non-numeric values
-
+    
     # CALL_TYPE
     test.loc[test["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
     test.loc[test["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
@@ -287,12 +301,12 @@ if __name__ == "__main__":
     test["ORIGIN_CALL"] = test["ORIGIN_CALL"].fillna(round(test["ORIGIN_CALL"].mean()))
 
     test["ORIGIN_STAND"] = test["ORIGIN_STAND"].fillna(round(test["ORIGIN_STAND"].mean()))
-    
+
     test["DIRECTION"]=0
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
-	
-	
+    
+
     X_test = []
     X_long_test = []
     X_lat_test = []
@@ -307,17 +321,17 @@ if __name__ == "__main__":
         
         #No direction if the size is equal to 1
         if dist > 1:
-        #Compute the direction        
-        
+        #Compute the direction
+
             dist1_test = np.linalg.norm(np.asarray(rides_test[i][-2])-np.asarray(rides_test[i][0]))
             if dist1_test == 0:
                 dist1_test = 0.0000001
             tmp_test = rides_test[i][-2]
             tmp_test[0] = rides_test[i][0][0]
             dist2_test = np.linalg.norm(np.asarray(tmp_test)-np.asarray(rides_test[i][0]))
-            
+
             tmp_angle_test = np.arccos(dist2_test/dist1_test)*(180/np.pi)
-            
+
             if rides_test[i][-2][1] >= rides_test[i][0][1]:
                 if rides_test[i][-2][0] >= rides_test[i][0][0]:
                     tmp_angle_test =tmp_angle_test
@@ -328,9 +342,11 @@ if __name__ == "__main__":
                     tmp_angle_test = 360-tmp_angle_test
                 else:
                     tmp_angle_test = 270-tmp_angle_test
-                
-            
+
+
             test["DIRECTION"].iloc[i]= tmp_angle_test
+
+        
 
         X_lat_test_tmp = []
         X_long_test_tmp = []
@@ -379,4 +395,3 @@ if __name__ == "__main__":
     print_submission(trip_id=trip_id, result=result, name="test_mult_sampleSubmission_generated")
 
     print("End of prediction")
-   
