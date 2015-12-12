@@ -4,6 +4,7 @@ from math import floor, ceil
 
 import numpy as np
 import pandas as pd
+from sklearn import preprocessing
 from sklearn.cross_validation import KFold
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, BaggingRegressor, AdaBoostRegressor
 from sklearn.linear_model import SGDRegressor
@@ -79,7 +80,7 @@ if __name__ == "__main__":
 
     print("Reading values...")
     data_read = pd.read_pickle('dir_data_pickle_500000.pkl')
-    data = data_read.sample(frac=0.5)
+    data = data_read.sample(frac=0.1)
 
     data = data[data["POLYLINE"].map(len) > 3]
 
@@ -93,7 +94,15 @@ if __name__ == "__main__":
     # max_depths = [1]
     # n_neighbs = np.append(np.arange(1,20,2), np.arange(25,200,25))
 
-    predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"]
+
+    lb = preprocessing.LabelBinarizer()
+    lb.fit(data["TAXI_ID"].values)
+    taxiId = lb.transform(data["TAXI_ID"].values)
+
+    for i in range(len(taxiId[0])):
+        data["A{}".format(i)] = taxiId[:,i]
+
+    predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"] + ["A{}".format(i) for i in range(len(taxiId[0]))]
 
     b = []
     v = []
@@ -183,14 +192,14 @@ if __name__ == "__main__":
 
         # Training
 
-        knn_25_long = BaggingRegressor(n_jobs=-1, )
-        knn_25_lat = BaggingRegressor(n_jobs=-1, )
-        knn_50_long = BaggingRegressor(n_jobs=-1, )
-        knn_50_lat = BaggingRegressor(n_jobs=-1, )
-        knn_100_long = BaggingRegressor(n_jobs=-1, )
-        knn_100_lat = BaggingRegressor(n_jobs=-1, )
-        knn_plus_long = BaggingRegressor(n_jobs=-1, )
-        knn_plus_lat = BaggingRegressor(n_jobs=-1, )
+        knn_25_long = DecisionTreeRegressor()
+        knn_25_lat = DecisionTreeRegressor()
+        knn_50_long = DecisionTreeRegressor()
+        knn_50_lat = DecisionTreeRegressor()
+        knn_100_long = DecisionTreeRegressor()
+        knn_100_lat = DecisionTreeRegressor()
+        knn_plus_long = DecisionTreeRegressor()
+        knn_plus_lat = DecisionTreeRegressor()
 
         knn_25_long.fit(np.array(X_25_long), np.array(y_25_long))
         knn_25_lat.fit(np.array(X_25_lat), np.array(y_25_lat))
