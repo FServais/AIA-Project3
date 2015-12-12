@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     print("Reading values...")
     data_read = pd.read_pickle('dir_data_pickle_500000.pkl')
-    data = data_read.sample(frac=0.1)
+    data = data_read.sample(frac=0.5)
 
     data = data[data["POLYLINE"].map(len) > 3]
 
@@ -116,14 +116,18 @@ if __name__ == "__main__":
             rides_ls[i] = rides_ls[i][:-1]
 
         # Separate inputs and outputs by number of features
-        X_25 = []
-        X_50 = []
-        X_100 = []
+        X_24 = []
+        X_33 = []
+        X_42 = []
+        X_52 = []
+        X_69 = []
         X_plus = []
 
-        y_25 = []
-        y_50 = []
-        y_100 = []
+        y_24 = []
+        y_33 = []
+        y_42 = []
+        y_52 = []
+        y_69 = []
         y_plus = []
 
         longest_ride_length = 4000
@@ -150,15 +154,21 @@ if __name__ == "__main__":
             preds = [X_ls[f].iloc[i] for f in predictors]
 
             # Add the data to the corresponding <X,y>
-            if dist <= 25:
-                X_25.append(expand_list(long, 25) + expand_list(lat, 25) + preds)
-                y_25.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 50:
-                X_50.append(expand_list(long, 50) + expand_list(lat, 50) + preds)
-                y_50.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 100:
-                X_100.append(expand_list(long, 100) + expand_list(lat, 100) + preds)
-                y_100.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            if dist <= 24:
+                X_24.append(expand_list(long, 24) + expand_list(lat, 24) + preds)
+                y_24.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            elif dist <= 33:
+                X_33.append(expand_list(long, 33) + expand_list(lat, 33) + preds)
+                y_33.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            elif dist <= 42:
+                X_42.append(expand_list(long, 42) + expand_list(lat, 42) + preds)
+                y_42.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            elif dist <= 52:
+                X_52.append(expand_list(long, 52) + expand_list(lat, 52) + preds)
+                y_52.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            elif dist <= 69:
+                X_69.append(expand_list(long, 69) + expand_list(lat, 69) + preds)
+                y_69.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
             else:
                 X_plus.append(expand_list(long, longest_ride_length) + expand_list(lat, longest_ride_length) + preds)
                 y_plus.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
@@ -166,14 +176,18 @@ if __name__ == "__main__":
 
         # Training
 
-        knn_25 = DecisionTreeRegressor()
-        knn_50 = DecisionTreeRegressor()
-        knn_100 = DecisionTreeRegressor()
+        knn_24 = DecisionTreeRegressor()
+        knn_33 = DecisionTreeRegressor()
+        knn_42 = DecisionTreeRegressor()
+        knn_52 = DecisionTreeRegressor()
+        knn_69 = DecisionTreeRegressor()
         knn_plus = DecisionTreeRegressor()
 
-        knn_25.fit(np.array(X_25), np.array(y_25))
-        knn_50.fit(np.array(X_50), np.array(y_50))
-        knn_100.fit(np.array(X_100), np.array(y_100))
+        knn_24.fit(np.array(X_24), np.array(y_24))
+        knn_33.fit(np.array(X_33), np.array(y_33))
+        knn_42.fit(np.array(X_42), np.array(y_42))
+        knn_52.fit(np.array(X_52), np.array(y_52))
+        knn_69.fit(np.array(X_69), np.array(y_69))
         knn_plus.fit(np.array(X_plus), np.array(y_plus))
 
         # ========= TEST
@@ -225,17 +239,25 @@ if __name__ == "__main__":
             preds = [X_test[f].iloc[i] for f in predictors]
 
             # Predict the point
-            if predicted_len <= 25:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25) + preds)
-                prediction = knn_25.predict(X_to_predict.reshape(1,-1))
+            if predicted_len <= 24:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 24) + expand_list(X_lat_test_tmp, 24) + preds)
+                prediction = knn_24.predict(X_to_predict.reshape(1,-1))
                 y_predict.append(prediction[0])
-            elif predicted_len <= 50:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50) + preds)
-                prediction = knn_50.predict(X_to_predict.reshape(1,-1))
+            elif predicted_len <= 33:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 33) + expand_list(X_lat_test_tmp, 33) + preds)
+                prediction = knn_33.predict(X_to_predict.reshape(1,-1))
                 y_predict.append(prediction[0])
-            elif predicted_len <= 100:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100) + preds)
-                prediction = knn_100.predict(X_to_predict.reshape(1,-1))
+            elif predicted_len <= 42:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 42) + expand_list(X_lat_test_tmp, 42) + preds)
+                prediction = knn_42.predict(X_to_predict.reshape(1,-1))
+                y_predict.append(prediction[0])
+            elif predicted_len <= 52:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 52) + expand_list(X_lat_test_tmp, 52) + preds)
+                prediction = knn_52.predict(X_to_predict.reshape(1,-1))
+                y_predict.append(prediction[0])
+            elif predicted_len <= 69:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 69) + expand_list(X_lat_test_tmp, 69) + preds)
+                prediction = knn_69.predict(X_to_predict.reshape(1,-1))
                 y_predict.append(prediction[0])
             else:
                 X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length) + preds)
