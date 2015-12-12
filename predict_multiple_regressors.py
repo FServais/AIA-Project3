@@ -70,12 +70,12 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"]
+    predictors = ["CALL_TYPE", "TIMESTAMP"]
 
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
-    data = pd.read_pickle('dir_data_pickle.pkl')
-    # data = data.sample(frac=0.01)
+    data_read = pd.read_pickle('dir_data_pickle.pkl')
+    data = data_read.sample(frac=1)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -83,15 +83,23 @@ if __name__ == "__main__":
     rides = data['POLYLINE'].values
 
     # Separate inputs and outputs by number of features
-    X_25 = []
-    X_50 = []
-    X_100 = []
-    X_plus = []
+    X_25_long = []
+    X_25_lat = []
+    X_50_long = []
+    X_50_lat = []
+    X_100_long = []
+    X_100_lat = []
+    X_plus_long = []
+    X_plus_lat = []
 
-    y_25 = []
-    y_50 = []
-    y_100 = []
-    y_plus = []
+    y_25_long = []
+    y_25_lat = []
+    y_50_long = []
+    y_50_lat = []
+    y_100_long = []
+    y_100_lat = []
+    y_plus_long = []
+    y_plus_lat = []
 
     longest_ride_length = 4000
 
@@ -127,17 +135,25 @@ if __name__ == "__main__":
 
         # Add the data to the corresponding <X,y>
         if dist <= 25:
-            X_25.append(expand_list(long, 25) + expand_list(lat, 25) + preds)
-            y_25.append([rides[i][-1][0], rides[i][-1][1]])
+            X_25_long.append(expand_list(long, 25) + preds)
+            X_25_lat.append(expand_list(lat, 25) + preds)
+            y_25_long.append([rides[i][-1][0]])
+            y_25_lat.append([rides[i][-1][1]])
         elif dist <= 50:
-            X_50.append(expand_list(long, 50) + expand_list(lat, 50) + preds)
-            y_50.append([rides[i][-1][0], rides[i][-1][1]])
+            X_50_long.append(expand_list(long, 50) + preds)
+            X_50_lat.append(expand_list(lat, 50) + preds)
+            y_50_long.append([rides[i][-1][0]])
+            y_50_lat.append([rides[i][-1][1]])
         elif dist <= 100:
-            X_100.append(expand_list(long, 100) + expand_list(lat, 100) + preds)
-            y_100.append([rides[i][-1][0], rides[i][-1][1]])
+            X_100_long.append(expand_list(long, 100) + preds)
+            X_100_lat.append(expand_list(lat, 100) + preds)
+            y_100_long.append([rides[i][-1][0]])
+            y_100_lat.append([rides[i][-1][1]])
         else:
-            X_plus.append(expand_list(long, longest_ride_length) + expand_list(lat, longest_ride_length) + preds)
-            y_plus.append([rides[i][-1][0], rides[i][-1][1]])
+            X_plus_long.append(expand_list(long, longest_ride_length) + preds)
+            X_plus_lat.append(expand_list(lat, longest_ride_length) + preds)
+            y_plus_long.append([rides[i][-1][0]])
+            y_plus_lat.append([rides[i][-1][1]])
 
         origins.append([rides[i][0][0], rides[i][0][1]] + preds)
         length_rides.append(dist)
@@ -145,17 +161,25 @@ if __name__ == "__main__":
     print("Training")
 
     # Training
-    knn_25 = RandomForestRegressor(max_depth=25, n_jobs=-1)
-    knn_50 = RandomForestRegressor(max_depth=25, n_jobs=-1)
-    knn_100 = RandomForestRegressor(max_depth=25, n_jobs=-1)
-    knn_plus = RandomForestRegressor(max_depth=25, n_jobs=-1)
+    knn_25_long = DecisionTreeRegressor()
+    knn_25_lat = DecisionTreeRegressor()
+    knn_50_long = DecisionTreeRegressor()
+    knn_50_lat = DecisionTreeRegressor()
+    knn_100_long = DecisionTreeRegressor()
+    knn_100_lat = DecisionTreeRegressor()
+    knn_plus_long = DecisionTreeRegressor()
+    knn_plus_lat = DecisionTreeRegressor()
 
-    knn_25.fit(np.array(X_25), np.array(y_25))
-    knn_50.fit(np.array(X_50), np.array(y_50))
-    knn_100.fit(np.array(X_100), np.array(y_100))
-    knn_plus.fit(np.array(X_plus), np.array(y_plus))
+    knn_25_long.fit(np.array(X_25_long), np.array(y_25_long))
+    knn_25_lat.fit(np.array(X_25_lat), np.array(y_25_lat))
+    knn_50_long.fit(np.array(X_50_long), np.array(y_50_long))
+    knn_50_lat.fit(np.array(X_50_lat), np.array(y_50_lat))
+    knn_100_long.fit(np.array(X_100_long), np.array(y_100_long))
+    knn_100_lat.fit(np.array(X_100_lat), np.array(y_100_lat))
+    knn_plus_long.fit(np.array(X_plus_long), np.array(y_plus_long))
+    knn_plus_lat.fit(np.array(X_plus_lat), np.array(y_plus_lat))
 
-    knn_len = DecisionTreeRegressor(max_depth=10)
+    knn_len = DecisionTreeRegressor()
     knn_len.fit(origins, length_rides)
 
     print("End of training")
@@ -174,7 +198,8 @@ if __name__ == "__main__":
     X_long_test = []
     X_lat_test = []
 
-    y_predict = []
+    y_predict_long = []
+    y_predict_lat = []
     # For each path
     for i in range(len(rides_test)):
         if i%1000 == 0:
@@ -207,30 +232,46 @@ if __name__ == "__main__":
 
         # Predict the point
         if predicted_len <= 25:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25) + preds)
-            prediction = knn_25.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + preds)
+            prediction = knn_25_long.predict(X_to_predict.reshape(1,-1))
+            y_predict_long.append(prediction[0])
+
+            X_to_predict = np.array(expand_list(X_lat_test_tmp, 25) + preds)
+            prediction = knn_25_lat.predict(X_to_predict.reshape(1,-1))
+            y_predict_lat.append(prediction[0])
         elif predicted_len <= 50:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50) + preds)
-            prediction = knn_50.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + preds)
+            prediction = knn_50_long.predict(X_to_predict.reshape(1,-1))
+            y_predict_long.append(prediction[0])
+
+            X_to_predict = np.array(expand_list(X_lat_test_tmp, 50) + preds)
+            prediction = knn_50_lat.predict(X_to_predict.reshape(1,-1))
+            y_predict_lat.append(prediction[0])
         elif predicted_len <= 100:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100) + preds)
-            prediction = knn_100.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + preds)
+            prediction = knn_100_long.predict(X_to_predict.reshape(1,-1))
+            y_predict_long.append(prediction[0])
+
+            X_to_predict = np.array(expand_list(X_lat_test_tmp, 100) + preds)
+            prediction = knn_100_lat.predict(X_to_predict.reshape(1,-1))
+            y_predict_lat.append(prediction[0])
         else:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length) + preds)
-            prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
-            y_predict.append(prediction[0])
+            X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + preds)
+            prediction = knn_plus_long.predict(X_to_predict.reshape(1,-1))
+            y_predict_long.append(prediction[0])
+
+            X_to_predict = np.array(expand_list(X_lat_test_tmp, longest_ride_length) + preds)
+            prediction = knn_plus_lat.predict(X_to_predict.reshape(1,-1))
+            y_predict_lat.append(prediction[0])
 
     print("Writing")
     result = np.zeros((n_trip_test, 2))
 
-    for i in range(len(y_predict)):
-        result[i, 0] = y_predict[i][1]
-        result[i, 1] = y_predict[i][0]
+    for i in range(len(y_predict_long)):
+        result[i, 0] = y_predict_lat[i]
+        result[i, 1] = y_predict_long[i]
 
     # Write submission
-    print_submission(trip_id=trip_id, result=result, name="test_mult_sampleSubmission_generated")
+    print_submission(trip_id=trip_id, result=result, name="div_mult_sampleSubmission_generated")
 
     print("End of prediction")
