@@ -5,7 +5,7 @@ from math import floor, ceil
 import numpy as np
 import pandas as pd
 from sklearn.cross_validation import KFold
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, BaggingRegressor, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from random import randint
@@ -166,10 +166,10 @@ if __name__ == "__main__":
 
         # Training
 
-        knn_25 = DecisionTreeRegressor()
-        knn_50 = DecisionTreeRegressor()
-        knn_100 = DecisionTreeRegressor()
-        knn_plus = DecisionTreeRegressor()
+        knn_25 = RandomForestRegressor(n_jobs=-1)
+        knn_50 = RandomForestRegressor(n_jobs=-1)
+        knn_100 = RandomForestRegressor(n_jobs=-1)
+        knn_plus = RandomForestRegressor(n_jobs=-1)
 
         knn_25.fit(np.array(X_25), np.array(y_25))
         knn_50.fit(np.array(X_50), np.array(y_50))
