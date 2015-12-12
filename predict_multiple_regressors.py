@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn import cross_validation, grid_search
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import LabelBinarizer
 from itertools import repeat
 from math import floor
 import datetime
@@ -69,43 +70,17 @@ def from_time_to_day_period(row):
     return hour
 
 if __name__ == "__main__":
-    predictors = ["CALL_TYPE", "TAXI_ID", "TIMESTAMP", "DIRECTION"]
+    predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"]
 
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=50000)
-    data = data.sample(frac=0.5)
+    data = pd.read_pickle('dir_data_pickle.pkl')
+    # data = data.sample(frac=0.01)
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
-    # Replace non-numeric values
-    #
-    # # CALL_TYPE
-    # data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-    # data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-    # data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
-    #
-    # # DAY_TYPE
-    # data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-    # data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-    # data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
-    #
-    # # MISSING_DATA
-    # data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
-    # data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-    #
-    # data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
-    #
-    # data["ORIGIN_CALL"] = data["ORIGIN_CALL"].fillna(round(data["ORIGIN_CALL"].mean()))
-    #
-    # data["ORIGIN_STAND"] = data["ORIGIN_STAND"].fillna(round(data["ORIGIN_STAND"].mean()))
-
-    # Delete all the datas which have missing data in their paths
-    data = data[data["MISSING_DATA"] != 1]
-
     # Extract 'y' and long and lat
     rides = data['POLYLINE'].values
-    rides = list(map(eval, rides))
 
     # Separate inputs and outputs by number of features
     X_25 = []
@@ -118,7 +93,7 @@ if __name__ == "__main__":
     y_100 = []
     y_plus = []
 
-    longest_ride_length = 3390
+    longest_ride_length = 4000
 
     # X,y used to predict the path
     origins = []
@@ -128,6 +103,9 @@ if __name__ == "__main__":
 
     # For each ride
     for i in range(len(rides)):
+        if i%1000 == 0:
+            print("Process ride {}".format(i))
+
         dist = len(rides[i])
 
         if dist < 2:
@@ -158,27 +136,19 @@ if __name__ == "__main__":
             X_100.append(expand_list(long, 100) + expand_list(lat, 100) + preds)
             y_100.append([rides[i][-1][0], rides[i][-1][1]])
         else:
-            X_plus.append([long, lat])
+            X_plus.append(expand_list(long, longest_ride_length) + expand_list(lat, longest_ride_length) + preds)
             y_plus.append([rides[i][-1][0], rides[i][-1][1]])
 
         origins.append([rides[i][0][0], rides[i][0][1]] + preds)
-        # origins.append([rides[i][0][0], rides[i][0][1]])
         length_rides.append(dist)
-
-    # Correct X_plus (i.e. expand long and lat)
-    for i in range(len(X_plus)):
-        X_plus[i] = expand_list(X_plus[i][0], longest_ride_length) + expand_list(X_plus[i][1], longest_ride_length) + [data[f].iloc[i] for f in predictors]
-        if len(X_plus[i]) != 2*longest_ride_length:
-            X_plus[i] = X_plus[i-1]
-            length_rides[i] = length_rides[i-1]
 
     print("Training")
 
     # Training
-    knn_25 = DecisionTreeRegressor()
-    knn_50 = DecisionTreeRegressor()
-    knn_100 = DecisionTreeRegressor()
-    knn_plus = DecisionTreeRegressor()
+    knn_25 = RandomForestRegressor(max_depth=25, n_jobs=-1)
+    knn_50 = RandomForestRegressor(max_depth=25, n_jobs=-1)
+    knn_100 = RandomForestRegressor(max_depth=25, n_jobs=-1)
+    knn_plus = RandomForestRegressor(max_depth=25, n_jobs=-1)
 
     knn_25.fit(np.array(X_25), np.array(y_25))
     knn_50.fit(np.array(X_50), np.array(y_50))
@@ -191,35 +161,12 @@ if __name__ == "__main__":
     print("End of training")
 
     # Test Set Loading
-    test = pd.read_csv('test.csv', index_col="TRIP_ID")
+    test = pd.read_pickle('dir_test_pickle.pkl')
     n_trip_test, _ = test.shape
     print('Shape of test data: {}'.format(test.shape))
     trip_id = list(test.index)
 
-    # Replace non-numeric values
-    #
-    # # CALL_TYPE
-    # test.loc[test["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-    # test.loc[test["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-    # test.loc[test["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
-    #
-    # # DAY_TYPE
-    # test.loc[test["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-    # test.loc[test["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-    # test.loc[test["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
-    #
-    # # MISSING_DATA
-    # test.loc[test["MISSING_DATA"] == True, "MISSING_DATA"] = 1
-    # test.loc[test["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-    #
-    # test["TIMESTAMP"] = test.apply(from_time_to_day_period, axis=1)
-    #
-    # test["ORIGIN_CALL"] = test["ORIGIN_CALL"].fillna(round(test["ORIGIN_CALL"].mean()))
-    #
-    # test["ORIGIN_STAND"] = test["ORIGIN_STAND"].fillna(round(test["ORIGIN_STAND"].mean()))
-
     rides_test = test['POLYLINE'].values
-    rides_test = list(map(eval, rides_test))
 
     print("Test preprocessing")
 
@@ -230,6 +177,9 @@ if __name__ == "__main__":
     y_predict = []
     # For each path
     for i in range(len(rides_test)):
+        if i%1000 == 0:
+            print("Process ride {}".format(i))
+
         dist = len(rides_test[i])
 
         if dist < 1:
@@ -238,8 +188,10 @@ if __name__ == "__main__":
         X_lat_test_tmp = []
         X_long_test_tmp = []
 
+        preds = [test[f].iloc[i] for f in predictors]
+
         # Predict the length of the path
-        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + [test[f].iloc[i] for f in predictors])
+        c = np.array([rides_test[i][0][0], rides_test[i][0][1]] + preds)
         # c = np.array([rides_test[i][0][0], rides_test[i][0][1]])
         predicted_len = knn_len.predict(c.reshape(1,-1))
         predicted_len = predicted_len[0]
@@ -255,19 +207,19 @@ if __name__ == "__main__":
 
         # Predict the point
         if predicted_len <= 25:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25))
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25) + preds)
             prediction = knn_25.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         elif predicted_len <= 50:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50))
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50) + preds)
             prediction = knn_50.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         elif predicted_len <= 100:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100))
+            X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100) + preds)
             prediction = knn_100.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         else:
-            X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length))
+            X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length) + preds)
             prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
 
