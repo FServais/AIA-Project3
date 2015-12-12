@@ -5,7 +5,8 @@ from math import floor, ceil
 import numpy as np
 import pandas as pd
 from sklearn.cross_validation import KFold
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, BaggingRegressor, AdaBoostRegressor
+from sklearn.linear_model import SGDRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from random import randint
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     # max_depths = [1]
     # n_neighbs = np.append(np.arange(1,20,2), np.arange(25,200,25))
 
-    predictors = ["CALL_TYPE", "DAY_TYPE", "TIMESTAMP"]
+    predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"]
 
     b = []
     v = []
@@ -116,19 +117,23 @@ if __name__ == "__main__":
             rides_ls[i] = rides_ls[i][:-1]
 
         # Separate inputs and outputs by number of features
-        X_24 = []
-        X_33 = []
-        X_42 = []
-        X_52 = []
-        X_69 = []
-        X_plus = []
+        X_25_long = []
+        X_25_lat = []
+        X_50_long = []
+        X_50_lat = []
+        X_100_long = []
+        X_100_lat = []
+        X_plus_long = []
+        X_plus_lat = []
 
-        y_24 = []
-        y_33 = []
-        y_42 = []
-        y_52 = []
-        y_69 = []
-        y_plus = []
+        y_25_long = []
+        y_25_lat = []
+        y_50_long = []
+        y_50_lat = []
+        y_100_long = []
+        y_100_lat = []
+        y_plus_long = []
+        y_plus_lat = []
 
         longest_ride_length = 4000
 
@@ -154,41 +159,47 @@ if __name__ == "__main__":
             preds = [X_ls[f].iloc[i] for f in predictors]
 
             # Add the data to the corresponding <X,y>
-            if dist <= 24:
-                X_24.append(expand_list(long, 24) + expand_list(lat, 24) + preds)
-                y_24.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 33:
-                X_33.append(expand_list(long, 33) + expand_list(lat, 33) + preds)
-                y_33.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 42:
-                X_42.append(expand_list(long, 42) + expand_list(lat, 42) + preds)
-                y_42.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 52:
-                X_52.append(expand_list(long, 52) + expand_list(lat, 52) + preds)
-                y_52.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
-            elif dist <= 69:
-                X_69.append(expand_list(long, 69) + expand_list(lat, 69) + preds)
-                y_69.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+            if dist <= 25:
+                X_25_long.append(expand_list(long, 25) + preds)
+                X_25_lat.append(expand_list(lat, 25) + preds)
+                y_25_long.append([rides_ls[i][-1][0]])
+                y_25_lat.append([rides_ls[i][-1][1]])
+            elif dist <= 50:
+                X_50_long.append(expand_list(long, 50) + preds)
+                X_50_lat.append(expand_list(lat, 50) + preds)
+                y_50_long.append([rides_ls[i][-1][0]])
+                y_50_lat.append([rides_ls[i][-1][1]])
+            elif dist <= 100:
+                X_100_long.append(expand_list(long, 100) + preds)
+                X_100_lat.append(expand_list(lat, 100) + preds)
+                y_100_long.append([rides_ls[i][-1][0]])
+                y_100_lat.append([rides_ls[i][-1][1]])
             else:
-                X_plus.append(expand_list(long, longest_ride_length) + expand_list(lat, longest_ride_length) + preds)
-                y_plus.append([rides_ls[i][-1][0], rides_ls[i][-1][1]])
+                X_plus_long.append(expand_list(long, longest_ride_length) + preds)
+                X_plus_lat.append(expand_list(lat, longest_ride_length) + preds)
+                y_plus_long.append([rides_ls[i][-1][0]])
+                y_plus_lat.append([rides_ls[i][-1][1]])
 
 
         # Training
 
-        knn_24 = DecisionTreeRegressor()
-        knn_33 = DecisionTreeRegressor()
-        knn_42 = DecisionTreeRegressor()
-        knn_52 = DecisionTreeRegressor()
-        knn_69 = DecisionTreeRegressor()
-        knn_plus = DecisionTreeRegressor()
+        knn_25_long = BaggingRegressor(n_jobs=-1, )
+        knn_25_lat = BaggingRegressor(n_jobs=-1, )
+        knn_50_long = BaggingRegressor(n_jobs=-1, )
+        knn_50_lat = BaggingRegressor(n_jobs=-1, )
+        knn_100_long = BaggingRegressor(n_jobs=-1, )
+        knn_100_lat = BaggingRegressor(n_jobs=-1, )
+        knn_plus_long = BaggingRegressor(n_jobs=-1, )
+        knn_plus_lat = BaggingRegressor(n_jobs=-1, )
 
-        knn_24.fit(np.array(X_24), np.array(y_24))
-        knn_33.fit(np.array(X_33), np.array(y_33))
-        knn_42.fit(np.array(X_42), np.array(y_42))
-        knn_52.fit(np.array(X_52), np.array(y_52))
-        knn_69.fit(np.array(X_69), np.array(y_69))
-        knn_plus.fit(np.array(X_plus), np.array(y_plus))
+        knn_25_long.fit(np.array(X_25_long), np.array(y_25_long))
+        knn_25_lat.fit(np.array(X_25_lat), np.array(y_25_lat))
+        knn_50_long.fit(np.array(X_50_long), np.array(y_50_long))
+        knn_50_lat.fit(np.array(X_50_lat), np.array(y_50_lat))
+        knn_100_long.fit(np.array(X_100_long), np.array(y_100_long))
+        knn_100_lat.fit(np.array(X_100_lat), np.array(y_100_lat))
+        knn_plus_long.fit(np.array(X_plus_long), np.array(y_plus_long))
+        knn_plus_lat.fit(np.array(X_plus_lat), np.array(y_plus_lat))
 
         # ========= TEST
         X_test = data.iloc[test_index]
@@ -212,7 +223,8 @@ if __name__ == "__main__":
 
         X_test["POLYLINE"] = X_test["POLYLINE"].apply(extract_subpath)
 
-        y_predict = []
+        y_predict_long = []
+        y_predict_lat = []
         # For each path
         for i in range(len(rides_test)):
             dist = len(rides_test[i])
@@ -239,36 +251,46 @@ if __name__ == "__main__":
             preds = [X_test[f].iloc[i] for f in predictors]
 
             # Predict the point
-            if predicted_len <= 24:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 24) + expand_list(X_lat_test_tmp, 24) + preds)
-                prediction = knn_24.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
-            elif predicted_len <= 33:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 33) + expand_list(X_lat_test_tmp, 33) + preds)
-                prediction = knn_33.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
-            elif predicted_len <= 42:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 42) + expand_list(X_lat_test_tmp, 42) + preds)
-                prediction = knn_42.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
-            elif predicted_len <= 52:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 52) + expand_list(X_lat_test_tmp, 52) + preds)
-                prediction = knn_52.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
-            elif predicted_len <= 69:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, 69) + expand_list(X_lat_test_tmp, 69) + preds)
-                prediction = knn_69.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
+            if predicted_len <= 25:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + preds)
+                prediction = knn_25_long.predict(X_to_predict.reshape(1,-1))
+                y_predict_long.append(prediction[0])
+
+                X_to_predict = np.array(expand_list(X_lat_test_tmp, 25) + preds)
+                prediction = knn_25_lat.predict(X_to_predict.reshape(1,-1))
+                y_predict_lat.append(prediction[0])
+            elif predicted_len <= 50:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + preds)
+                prediction = knn_50_long.predict(X_to_predict.reshape(1,-1))
+                y_predict_long.append(prediction[0])
+
+                X_to_predict = np.array(expand_list(X_lat_test_tmp, 50) + preds)
+                prediction = knn_50_lat.predict(X_to_predict.reshape(1,-1))
+                y_predict_lat.append(prediction[0])
+            elif predicted_len <= 100:
+                X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + preds)
+                prediction = knn_100_long.predict(X_to_predict.reshape(1,-1))
+                y_predict_long.append(prediction[0])
+
+                X_to_predict = np.array(expand_list(X_lat_test_tmp, 100) + preds)
+                prediction = knn_100_lat.predict(X_to_predict.reshape(1,-1))
+                y_predict_lat.append(prediction[0])
             else:
-                X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length) + preds)
-                prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
-                y_predict.append(prediction[0])
+                X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + preds)
+                prediction = knn_plus_long.predict(X_to_predict.reshape(1,-1))
+                y_predict_long.append(prediction[0])
+
+                X_to_predict = np.array(expand_list(X_lat_test_tmp, longest_ride_length) + preds)
+                prediction = knn_plus_lat.predict(X_to_predict.reshape(1,-1))
+                y_predict_lat.append(prediction[0])
 
         LONG = X_test["DESTINATION"].apply(lambda row: row[0]).values
         LAT = X_test["DESTINATION"].apply(lambda row: row[1]).values
 
-        LONG_PREDICT = np.array(list(map(lambda c: c[0], y_predict)))
-        LAT_PREDICT = np.array(list(map(lambda c: c[1], y_predict)))
+        # LONG_PREDICT = np.array(list(map(lambda c: c[0], y_predict_long)))
+        # LAT_PREDICT = np.array(list(map(lambda c: c[1], y_predict_lat)))
+        LONG_PREDICT = y_predict_long
+        LAT_PREDICT = y_predict_lat
 
         b.append(np.mean([bias(LONG_PREDICT, LONG), bias(LAT_PREDICT, LAT)]))
         v.append(np.mean([var_ls(LONG_PREDICT), var_ls(LAT_PREDICT)]))
