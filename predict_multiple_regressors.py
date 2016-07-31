@@ -15,6 +15,8 @@ from itertools import repeat
 from math import floor
 import datetime
 
+from sklearn.feature_selection import SelectFromModel
+
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.tree import DecisionTreeRegressor
 from sknn.mlp import Regressor, Layer
@@ -75,51 +77,14 @@ if __name__ == "__main__":
     # Data Loading
     # TRAIN_SET_SIZE = 1500000
     print("Reading values...")
-    data_read = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=150000)
-    # data = data_read.sample(frac=1)
-    data = data_read
+    data = pd.read_pickle("new_data_pickle.pkl")
 
-    # Extract 'y' and long and lat
-    rides = data['POLYLINE'].values
-    rides = list(map(eval, rides))
-
-    data['POLYLINE'] = rides
-
-    data = data[data["POLYLINE"].map(len) > 2]
-
-    # CALL_TYPE
-    data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
-    data.loc[data["CALL_TYPE"] == 'B', "CALL_TYPE"] = 1
-    data.loc[data["CALL_TYPE"] == 'C', "CALL_TYPE"] = 2
-
-    # DAY_TYPE
-    data.loc[data["DAY_TYPE"] == 'A', "DAY_TYPE"] = 0
-    data.loc[data["DAY_TYPE"] == 'B', "DAY_TYPE"] = 1
-    data.loc[data["DAY_TYPE"] == 'C', "DAY_TYPE"] = 2
-
-    # MISSING_DATA
-    data.loc[data["MISSING_DATA"] == True, "MISSING_DATA"] = 1
-    data.loc[data["MISSING_DATA"] == False, "MISSING_DATA"] = 0
-
-    data["TIMESTAMP"] = data.apply(from_time_to_day_period, axis=1)
-
-    # Delete all the datas which have missing data in their paths
-    data = data[data["MISSING_DATA"] != 1]
-
-    data = data[["TIMESTAMP", "POLYLINE", "TAXI_ID"]]
-
-    lb = preprocessing.LabelBinarizer()
-    lb.fit(data["TAXI_ID"].values)
-    taxiId = lb.transform(data["TAXI_ID"].values)
-
-    for i in range(len(taxiId[0])):
-        data[str("A"+str(i))] = taxiId[:,i]
 
     # predictors = ["CALL_TYPE", "TIMESTAMP", "DIRECTION"] + ["A{}".format(i) for i in range(len(taxiId[0]))]
 
 
-    predictors = ["TIMESTAMP"] + [str('A'+str(i)) for i in range(len(taxiId[0]))]
-    # predictors = ["TIMESTAMP", "TAXI_ID"]
+    #predictors = ["TIMESTAMP"] + [str('A'+str(i)) for i in range(len(taxiId[0]))]
+    predictors = ["TIMESTAMP", "TAXI_ID"]
 
 
     n_trip_train, _ = data.shape
@@ -191,17 +156,37 @@ if __name__ == "__main__":
     print("Training")
 
     # Training
-    knn_25 = DecisionTreeRegressor()
-    knn_50 = DecisionTreeRegressor()
-    knn_100 = DecisionTreeRegressor()
-    knn_plus = DecisionTreeRegressor()
+    knn_25 = DecisionTreeRegressor(max_depth=40)
+    knn_50 = DecisionTreeRegressor(max_depth=40)
+    knn_100 = DecisionTreeRegressor(max_depth=40)
+    knn_plus = DecisionTreeRegressor(max_depth=40)
+
+    # knn_25_bis = DecisionTreeRegressor()
+    # knn_50_bis = DecisionTreeRegressor()
+    # knn_100_bis = DecisionTreeRegressor()
+    # knn_plus_bis = DecisionTreeRegressor()
 
     knn_25.fit(np.array(X_25), np.array(y_25))
     knn_50.fit(np.array(X_50), np.array(y_50))
     knn_100.fit(np.array(X_100), np.array(y_100))
     knn_plus.fit(np.array(X_plus), np.array(y_plus))
 
-    knn_len = DecisionTreeRegressor()
+
+    # model_25 = SelectFromModel(knn_25, prefit=True)#,threshold=(1./(52*k)))
+    # X_25_new = model_25.transform(X_25)
+    # model_50 = SelectFromModel(knn_50, prefit=True)#,threshold=(1./(102*k)))
+    # X_50_new = model_50.transform(X_50)
+    # model_100 = SelectFromModel(knn_100, prefit=True)#,threshold=(1./(202*k)))
+    # X_100_new = model_100.transform(X_100)
+    # model_plus = SelectFromModel(knn_plus, prefit=True)#,threshold=(1./(4002*k)))
+    # X_plus_new = model_plus.transform(X_plus)
+
+    knn_25.fit(X_25, np.array(y_25))
+    knn_50.fit(X_50, np.array(y_50))
+    knn_100.fit(X_100, np.array(y_100))
+    knn_plus.fit(X_plus, np.array(y_plus))
+
+    knn_len = DecisionTreeRegressor(max_depth=10)
     knn_len.fit(origins, length_rides)
 
     print("End of training")
@@ -237,12 +222,8 @@ if __name__ == "__main__":
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
 
-    lb = preprocessing.LabelBinarizer()
-    lb.fit(data["TAXI_ID"].values)
-    taxiId = lb.transform(test["TAXI_ID"].values)
 
-    for i in range(len(taxiId[0])):
-        test[str("A"+str(i))] = taxiId[:,i]
+
 
     print("Test preprocessing")
 
@@ -276,26 +257,34 @@ if __name__ == "__main__":
         if predicted_len < dist:
             predicted_len = dist
 
-        # For each coordinate
-        for coord in rides_test[i]:
-            X_long_test_tmp.append(coord[0])
-            X_lat_test_tmp.append(coord[1])
+        if dist == 1:
+            X_long_test_tmp.append(rides_test[i][0][0])
+            X_lat_test_tmp.append(rides_test[i][0][1])
+        else:
+            # For each coordinate
+            for c in range(dist-1):
+                X_long_test_tmp.append(rides_test[i][c][0])
+                X_lat_test_tmp.append(rides_test[i][c][1])
 
         # Predict the point
         if predicted_len <= 25:
             X_to_predict = np.array(expand_list(X_long_test_tmp, 25) + expand_list(X_lat_test_tmp, 25) + preds)
+            # X_to_predict = model_25.transform(X_to_predict)
             prediction = knn_25.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         elif predicted_len <= 50:
             X_to_predict = np.array(expand_list(X_long_test_tmp, 50) + expand_list(X_lat_test_tmp, 50) + preds)
+            # X_to_predict = model_50.transform(X_to_predict)
             prediction = knn_50.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         elif predicted_len <= 100:
             X_to_predict = np.array(expand_list(X_long_test_tmp, 100) + expand_list(X_lat_test_tmp, 100) + preds)
+            # X_to_predict = model_100.transform(X_to_predict)
             prediction = knn_100.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
         else:
             X_to_predict = np.array(expand_list(X_long_test_tmp, longest_ride_length) + expand_list(X_lat_test_tmp, longest_ride_length) + preds)
+            # X_to_predict = model_plus.transform(X_to_predict)
             prediction = knn_plus.predict(X_to_predict.reshape(1,-1))
             y_predict.append(prediction[0])
 
@@ -307,6 +296,6 @@ if __name__ == "__main__":
         result[i, 1] = y_predict[i][0]
 
     # Write submission
-    print_submission(trip_id=trip_id, result=result, name="taxiid_mult_sampleSubmission_generated")
+    print_submission(trip_id=trip_id, result=result, name="feature_selection_mult_sampleSubmission_generated")
 
     print("End of prediction")

@@ -8,7 +8,7 @@ from __future__ import print_function
 from math import *
 import pandas as pd
 import datetime
-import numpy as np
+
 
 def from_time_to_day_period(row):
     st = datetime.datetime.fromtimestamp(row["TIMESTAMP"]).strftime('%H')
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
 
     # Data Loading
-    data = pd.read_csv('train_data.csv', index_col="TRIP_ID", nrows=500000)
+    data = pd.read_csv('train_data.csv', index_col="TRIP_ID")
     n_trip_train, _ = data.shape
     print('Shape of train data: {}'.format(data.shape))
 
@@ -112,12 +112,12 @@ if __name__ == "__main__":
     data['DIRECTION'] = data["POLYLINE"].apply(lambda row: bearing(row[0][0], row[0][1], row[-1][0], row[-1][1]))
 
     print("Saving...")
-    data.to_pickle('dir_data_pickle_500000.pkl')
+    data.to_pickle('dir_data_pickle.pkl')
 
     print("End of conversion")
 
-    # # Data Loading
-    # data = pd.read_pickle('data_pickle.pkl')
-    # n_trip_train, _ = data.shape
-    # print('Shape of train data: {}'.format(data.shape))
-    # print("End of reading")
+    # Data Loading
+    data = pd.read_pickle('data_pickle.pkl')
+    n_trip_train, _ = data.shape
+    print('Shape of train data: {}'.format(data.shape))
+    print("End of reading")

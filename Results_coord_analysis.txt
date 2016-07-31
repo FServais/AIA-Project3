@@ -1,0 +1,343 @@
+DecisionTree with max_depth = 1
+('Bias: ', 0.000519242078123483)
+('Variance: ', 619.46620044770191)
+('Mean absolute error: ', 0.048305311964766839)
+
+
+DecisionTree with max_depth = 2
+('Bias: ', -0.00047415606488184398)
+('Variance: ', 619.32778672067241)
+('Mean absolute error: ', 0.047407291409173304)
+
+
+DecisionTree with max_depth = 3
+('Bias: ', 0.0027554854400992923)
+('Variance: ', 619.17632075681502)
+('Mean absolute error: ', 0.048953018157400295)
+
+
+DecisionTree with max_depth = 4
+('Bias: ', 9.3519039412015559e-05)
+('Variance: ', 619.29377013691294)
+('Mean absolute error: ', 0.049521586662167771)
+
+
+DecisionTree with max_depth = 5
+('Bias: ', -0.0022451846419340171)
+('Variance: ', 619.21274837882663)
+('Mean absolute error: ', 0.054367227170414055)
+
+
+DecisionTree with max_depth = 6
+('Bias: ', -0.0029848642690897265)
+('Variance: ', 619.11095187691728)
+('Mean absolute error: ', 0.054383924488856455)
+
+
+DecisionTree with max_depth = 7
+('Bias: ', -0.004152662787723453)
+('Variance: ', 619.02135505453327)
+('Mean absolute error: ', 0.056960437055433244)
+
+
+DecisionTree with max_depth = 8
+('Bias: ', -0.0039724551369679046)
+('Variance: ', 619.01451748166289)
+('Mean absolute error: ', 0.05605918383767524)
+
+
+DecisionTree with max_depth = 9
+('Bias: ', -0.0065078763118192979)
+('Variance: ', 618.97051560925399)
+('Mean absolute error: ', 0.060456863045161312)
+
+
+DecisionTree with max_depth = 10
+('Bias: ', -0.0038349009578600621)
+('Variance: ', 618.97825658734155)
+('Mean absolute error: ', 0.056634290660353415)
+
+
+DecisionTree with max_depth = 15
+('Bias: ', -0.0042231823565271514)
+('Variance: ', 618.96919929784463)
+('Mean absolute error: ', 0.057481937982754507)
+
+
+DecisionTree with max_depth = 20
+('Bias: ', -0.004282909629254779)
+('Variance: ', 618.95688244703808)
+('Mean absolute error: ', 0.057357940429239411)
+
+
+DecisionTree with max_depth = 25
+('Bias: ', -0.0057536596292511177)
+('Variance: ', 618.98120943530682)
+('Mean absolute error: ', 0.059760583921613375)
+
+
+DecisionTree with max_depth = 30
+('Bias: ', -0.0043144096292581464)
+('Variance: ', 618.96202854021283)
+('Mean absolute error: ', 0.05737221739120818)
+
+
+DecisionTree with max_depth = 35
+('Bias: ', -0.0042292429625915657)
+('Variance: ', 618.96895860865686)
+('Mean absolute error: ', 0.057477020686651524)
+
+
+DecisionTree with max_depth = 40
+('Bias: ', -0.0042829096292541875)
+('Variance: ', 618.9568824470382)
+('Mean absolute error: ', 0.057357940429239251)
+
+
+DecisionTree with max_depth = 45
+('Bias: ', -0.0042292429625886046)
+('Variance: ', 618.96895860865686)
+('Mean absolute error: ', 0.057477020686654147)
+
+
+DecisionTree with max_depth = None
+('Bias: ', -0.0042292429625886046)
+('Variance: ', 618.96895860865664)
+('Mean absolute error: ', 0.05747702068665473)
+
+
+KNN with N = 1
+('Bias: ', 0.00753661876360745)
+('Variance: ', 619.14222216363271)
+('Mean absolute error: ', 0.056378774243827846)
+
+
+KNN with N = 2
+('Bias: ', 0.0048309937636084044)
+('Variance: ', 619.19861361259984)
+('Mean absolute error: ', 0.05649086482274885)
+
+
+KNN with N = 3
+('Bias: ', 0.0044743687636075906)
+('Variance: ', 619.20870449629047)
+('Mean absolute error: ', 0.055702372479323747)
+
+
+KNN with N = 4
+('Bias: ', 0.0045849937636083622)
+('Variance: ', 619.21213139925305)
+('Mean absolute error: ', 0.05530718071349628)
+
+
+KNN with N = 5
+('Bias: ', 0.004298568763607828)
+('Variance: ', 619.19396435851388)
+('Mean absolute error: ', 0.055388069168832064)
+
+
+KNN with N = 6
+('Bias: ', 0.0040118687636088168)
+('Variance: ', 619.19447678358176)
+('Mean absolute error: ', 0.055283378187562966)
+
+
+KNN with N = 7
+('Bias: ', 0.0031966901921804216)
+('Variance: ', 619.17262856120533)
+('Mean absolute error: ', 0.055537929265542685)
+
+
+KNN with N = 8
+('Bias: ', 0.0030564937636080223)
+('Variance: ', 619.18357395075623)
+('Mean absolute error: ', 0.055531650842453546)
+
+
+KNN with N = 9
+('Bias: ', 0.0034072020969411199)
+('Variance: ', 619.19489731112105)
+('Mean absolute error: ', 0.05513246717856609)
+
+
+KNN with N = 10
+('Bias: ', 0.0032537437636079858)
+('Variance: ', 619.2128290689817)
+('Mean absolute error: ', 0.054806477539656867)
+
+
+KNN with N = 15
+('Bias: ', 0.0029465187636107024)
+('Variance: ', 619.18878872595531)
+('Mean absolute error: ', 0.054506759479923513)
+
+
+KNN with N = 20
+('Bias: ', 0.0027280312636097648)
+('Variance: ', 619.20346131837459)
+('Mean absolute error: ', 0.054007186999512236)
+
+
+KNN with N = 25
+('Bias: ', 0.0024388687636101025)
+('Variance: ', 619.21320107967642)
+('Mean absolute error: ', 0.054022431683118634)
+
+
+KNN with N = 30
+('Bias: ', 0.0025043937636096323)
+('Variance: ', 619.20861294590372)
+('Mean absolute error: ', 0.053817496365570011)
+
+
+KNN with N = 35
+('Bias: ', 0.0025589759064660691)
+('Variance: ', 619.2325237075496)
+('Mean absolute error: ', 0.053348395100621115)
+
+
+KNN with N = 40
+('Bias: ', 0.0025786687636101626)
+('Variance: ', 619.24550789620321)
+('Mean absolute error: ', 0.05324192645193173)
+
+
+KNN with N = 45
+('Bias: ', 0.002689635430276264)
+('Variance: ', 619.2494426295026)
+('Mean absolute error: ', 0.053088855358641752)
+
+
+KNN with N = 50
+('Bias: ', 0.0026284537636094285)
+('Variance: ', 619.24993465734553)
+('Mean absolute error: ', 0.0529462848862709)
+
+
+KNN with N = 70
+('Bias: ', 0.0024529259064678399)
+('Variance: ', 619.26072621829996)
+('Mean absolute error: ', 0.052409746612366227)
+
+
+KNN with N = 90
+('Bias: ', 0.0023829687636087726)
+('Variance: ', 619.26501004155728)
+('Mean absolute error: ', 0.052204021501604934)
+
+
+KNN with N = 110
+('Bias: ', 0.0023261983090598903)
+('Variance: ', 619.27393757203617)
+('Mean absolute error: ', 0.051939059809554378)
+
+
+KNN with N = 130
+('Bias: ', 0.0021828591482228412)
+('Variance: ', 619.28536298885513)
+('Mean absolute error: ', 0.052085173926924057)
+
+
+KNN with N = 150
+('Bias: ', 0.0020547937636052893)
+('Variance: ', 619.28462133830942)
+('Mean absolute error: ', 0.052041350092566219)
+
+
+KNN with N = 170
+('Bias: ', 0.00200528052831217)
+('Variance: ', 619.2800169953249)
+('Mean absolute error: ', 0.051908151774731598)
+
+
+KNN with N = 190
+('Bias: ', 0.0020228279741321131)
+('Variance: ', 619.27738793617721)
+('Mean absolute error: ', 0.051963154104323638)
+
+
+
+
+
+DecisionTree with max_depth = 1
+Bias:  -0.000605793171187
+Variance:  0.00038126929871
+Mean absolute error:  0.0193255681623
+
+
+DecisionTree with max_depth = 2
+Bias:  0.000755996320191
+Variance:  0.000522417966497
+Mean absolute error:  0.0175528015635
+
+
+DecisionTree with max_depth = 25
+Bias:  0.000420996942551
+Variance:  0.000833677411744
+Mean absolute error:  0.0126904549104
+
+
+DecisionTree with max_depth = 50
+Bias:  0.000405299184239
+Variance:  0.000887669520492
+Mean absolute error:  0.0127141389594
+
+
+DecisionTree with max_depth = 75
+Bias:  0.000436778233312
+Variance:  0.000835689360545
+Mean absolute error:  0.0127637685975
+
+
+DecisionTree with max_depth = 100
+Bias:  0.000403623602178
+Variance:  0.000856518112146
+Mean absolute error:  0.0127240393472
+
+
+————— Random Forest ———
+
+RandomForest with max_depth = 1
+Bias:  -0.000596327300523
+Variance:  0.000410257837381
+Mean absolute error:  0.0190081208396
+
+
+RandomForest with max_depth = 2
+Bias:  0.000615534778177
+Variance:  0.000512843932306
+Mean absolute error:  0.0169180730319
+
+
+RandomForest with max_depth = 3
+Bias:  0.000737214666864
+Variance:  0.000555281513544
+Mean absolute error:  0.0157860043694
+ 
+RandomForest with max_depth = 4
+Bias:  0.000787023602717
+Variance:  0.000624735441909
+Mean absolute error:  0.0145857767325
+
+RandomForest with max_depth = 5
+Bias:  0.000587686498242
+Variance:  0.000705762171772
+Mean absolute error:  0.0139744935323
+
+
+RandomForest with max_depth = 6
+Bias:  0.000720169293689
+Variance:  0.000684508706086
+Mean absolute error:  0.013477143625
+
+
+RandomForest with max_depth = 7
+Bias:  0.000461679647938
+Variance:  0.000745478464855
+Mean absolute error:  0.0131742940063
+
+
+RandomForest with max_depth = 8
+Bias:  0.000464931302242
+Variance:  0.000744222564908
+Mean absolute error:  0.0129329811051

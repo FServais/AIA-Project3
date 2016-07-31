@@ -8,6 +8,7 @@ from __future__ import print_function
 import datetime
 import pandas as pd
 
+
 def from_time_to_day_period(row):
     st = datetime.datetime.fromtimestamp(row["TIMESTAMP"]).strftime('%H')
     hour = int(st)
@@ -29,7 +30,6 @@ if __name__ == "__main__":
     rides = list(map(eval, rides))
 
     data['POLYLINE'] = rides
-
 
     # CALL_TYPE
     data.loc[data["CALL_TYPE"] == 'A', "CALL_TYPE"] = 0
@@ -60,9 +60,9 @@ if __name__ == "__main__":
 
     print("End of conversion")
 
-    # # Data Loading
-    # data = pd.read_pickle('data_pickle.pkl')
-    # n_trip_train, _ = data.shape
-    # print('Shape of train data: {}'.format(data.shape))
-    #
-    # print("End of reading")
+    # Data Loading
+    data = pd.read_pickle('data_pickle.pkl')
+    n_trip_train, _ = data.shape
+    print('Shape of train data: {}'.format(data.shape))
+
+    print("End of reading")

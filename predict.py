@@ -30,6 +30,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from itertools import repeat
 from math import floor
 
+
 def get_last_coordinate(l):
     """
     [[a,b], [c,d], [e,f]] -> [e,f]
@@ -38,8 +39,10 @@ def get_last_coordinate(l):
     """
     return l[-1]
 
+
 def repeat_list(l, times_repeated):
     return [x for item in l for x in repeat(item, times_repeated)]
+
 
 def expand_list(l, final_size):
     l_size = len(l)
@@ -96,15 +99,8 @@ if __name__ == "__main__":
     rides = data['POLYLINE'].values
     rides = list(map(eval, rides))
 
-    '''
-    #Delete the row with null path
-    for i in range(len(rides)):
-        if len(rides[i])==0:
-            data.drop(data.index[i])
-    '''
-
-    #print(data.describe())
-    #print(data.head(6))
+    # print(data.describe())
+    # print(data.head(6))
 
     X_lat = []
     X_long = []
@@ -144,14 +140,6 @@ if __name__ == "__main__":
     rides_test = test['POLYLINE'].values
     rides_test = list(map(eval, rides_test))
 
-    #
-    # X_test = []
-    # for i in range(len(rides_test)):
-    #     if len(rides_test[i]) < 2:
-    #         X_test.append(rides_test[i][0])
-    #     else:
-    #         X_test.append(rides_test[i][-2])
-
     X_test = []
     # For each path
     for i in range(len(rides_test)):
@@ -174,7 +162,6 @@ if __name__ == "__main__":
     # Training
     dtr = KNeighborsRegressor()
     
-    #for i in range(len(X)):
     dtr.fit(X, y)
 
     # Prediction
